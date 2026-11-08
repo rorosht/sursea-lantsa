@@ -29,7 +29,7 @@
 </div>
 
 <div class="stat-grid cols-3">
-    <div class="stat-card">
+    <div class="stat-card" style="background-color: #77F0FF">
         <div class="stat-top">
             <p class="stat-label">Total gross revenue</p>
             @include('partials.icon', ['name' => 'report'])
@@ -37,7 +37,7 @@
         <p class="stat-number">₱{{ number_format($grossRevenue) }}</p>
         <p class="stat-note">Passenger fares + cargo freight today</p>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" style="background-color: #50FC2E">
         <div class="stat-top">
             <p class="stat-label">Passengers revenue</p>
             @include('partials.icon', ['name' => 'users'])
@@ -45,7 +45,7 @@
         <p class="stat-number">₱{{ number_format($passengerRevenue) }}</p>
         <p class="stat-note"><strong>{{ $totalPassengers }} total passengers</strong> · ₱150 / seat</p>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" style="background-color: #60ADFF">
         <div class="stat-top">
             <p class="stat-label">Total cargo freight</p>
             @include('partials.icon', ['name' => 'box'])

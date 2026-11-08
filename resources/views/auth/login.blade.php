@@ -75,10 +75,6 @@
 
     <p class="switch-link">Don’t have an account? <a href="{{ route('register') }}">Register</a></p>
 
-    <div class="demo-box">
-        <strong>Demo accounts (password: <code>password</code>)</strong>
-        <span>Passenger: <strong>Robert</strong> · Operator: <strong>islanorte</strong> · Admin: <strong>admin</strong></span>
-    </div>
 </section>
 @endsection
 
