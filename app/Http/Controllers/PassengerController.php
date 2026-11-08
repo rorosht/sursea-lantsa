@@ -40,7 +40,7 @@ class PassengerController extends Controller
             'places' => SampleData::places(),
             'from' => $from,
             'to' => $to,
-            'reservation' => session('reservation'),
+            'reservation' => SampleData::activePassengerTicket('reservation'),
         ]);
     }
 
@@ -57,7 +57,7 @@ class PassengerController extends Controller
     {
         return view('passenger.waiting-list', [
             'trips' => SampleData::waitingListTrips(),
-            'waitlist' => session('waitlist'),
+            'waitlist' => SampleData::activePassengerTicket('waitlist'),
         ]);
     }
 
@@ -144,9 +144,16 @@ class PassengerController extends Controller
             'status' => 'Reserved',
         ]);
 
+        $username = strtolower((string) (session('user')['username'] ?? ''));
+        $reservationsByUser = session('reservations_by_user', []);
+        if ($username !== '') {
+            $reservationsByUser[$username] = $ticket;
+        }
+
         session([
             'custom_manifests' => $customManifests,
             'passenger_transactions' => $customTx,
+            'reservations_by_user' => $reservationsByUser,
             'reservation' => $ticket,
         ]);
 
@@ -155,6 +162,10 @@ class PassengerController extends Controller
 
     public function seatCancel()
     {
+        $username = strtolower((string) (session('user')['username'] ?? ''));
+        $reservationsByUser = session('reservations_by_user', []);
+        unset($reservationsByUser[$username]);
+        session(['reservations_by_user' => $reservationsByUser]);
         session()->forget('reservation');
 
         return redirect()->route('schedules')
@@ -163,13 +174,20 @@ class PassengerController extends Controller
 
     public function reservationDelete(Request $request)
     {
+        $username = strtolower((string) (session('user')['username'] ?? ''));
         $target = $request->input('target', 'reservation');
         if ($target === 'waitlist') {
+            $waitlistsByUser = session('waitlists_by_user', []);
+            unset($waitlistsByUser[$username]);
+            session(['waitlists_by_user' => $waitlistsByUser]);
             session()->forget('waitlist');
             return redirect()->route('waiting-list')
                 ->with('status', 'Your waiting list entry has been removed.');
         }
 
+        $reservationsByUser = session('reservations_by_user', []);
+        unset($reservationsByUser[$username]);
+        session(['reservations_by_user' => $reservationsByUser]);
         session()->forget('reservation');
         return redirect()->route('schedules')
             ->with('status', 'Your active seat reservation has been removed.');
@@ -257,10 +275,17 @@ class PassengerController extends Controller
             'status' => 'Waiting',
         ]);
 
+        $username = strtolower((string) (session('user')['username'] ?? ''));
+        $waitlistsByUser = session('waitlists_by_user', []);
+        if ($username !== '') {
+            $waitlistsByUser[$username] = $ticket;
+        }
+
         session([
             'custom_waitlist' => $customWaitlist,
             'custom_manifests' => $customManifests,
             'passenger_transactions' => $customTx,
+            'waitlists_by_user' => $waitlistsByUser,
             'waitlist' => $ticket,
         ]);
 
@@ -269,6 +294,10 @@ class PassengerController extends Controller
 
     public function waitlistCancel()
     {
+        $username = strtolower((string) (session('user')['username'] ?? ''));
+        $waitlistsByUser = session('waitlists_by_user', []);
+        unset($waitlistsByUser[$username]);
+        session(['waitlists_by_user' => $waitlistsByUser]);
         session()->forget('waitlist');
 
         return redirect()->route('waiting-list')

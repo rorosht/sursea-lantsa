@@ -181,6 +181,24 @@ class SampleData
         ];
     }
 
+    public static function activePassengerTicket(string $key): ?array
+    {
+        $user = session('user');
+        if (! $user || ($user['role'] ?? '') !== 'passenger') {
+            return null;
+        }
+
+        $username = strtolower((string) ($user['username'] ?? ''));
+        if ($username === '') {
+            return null;
+        }
+
+        $mapKey = $key === 'waitlist' ? 'waitlists_by_user' : 'reservations_by_user';
+        $byUser = session($mapKey, []);
+
+        return $byUser[$username] ?? null;
+    }
+
     // Passenger notifications (clickable & navigable)
     public static function passengerNotifications(): array
     {
@@ -227,8 +245,8 @@ class SampleData
             ],
         ];
 
-        if (session('reservation')) {
-            $res = session('reservation');
+        $res = self::activePassengerTicket('reservation');
+        if ($res) {
             array_unshift($list, [
                 'id' => 'PN-RES',
                 'time' => 'Just now',
@@ -241,8 +259,8 @@ class SampleData
             ]);
         }
 
-        if (session('waitlist')) {
-            $wl = session('waitlist');
+        $wl = self::activePassengerTicket('waitlist');
+        if ($wl) {
             array_unshift($list, [
                 'id' => 'PN-WL',
                 'time' => 'Just now',

@@ -3,6 +3,7 @@
 @section('title', 'Schedules - SURSEA')
 
 @section('content')
+@php $isPassenger = session('user') && (session('user')['role'] ?? '') === 'passenger'; @endphp
 <div class="container page">
 
     <div class="schedule-top">
@@ -12,19 +13,10 @@
             <p class="lead">Browse practical schedules and reserve a seat for your next crossing.</p>
         </div>
 
-        {{-- Shows after the passenger reserved a seat --}}
-        @if($reservation)
+        {{-- Shows only for a logged-in passenger who reserved a seat --}}
+        @if($isPassenger && $reservation)
             <div class="reserve-banner">
-                <div class="banner-head-row">
-                    <p>Reservation Schedule</p>
-                    <form method="POST" action="{{ route('passenger.reservation.delete') }}" class="banner-delete-form">
-                        @csrf
-                        <input type="hidden" name="target" value="reservation">
-                        <button type="submit" class="banner-delete-btn" title="Delete reservation" aria-label="Delete reservation">
-                            @include('partials.icon', ['name' => 'trash'])
-                        </button>
-                    </form>
-                </div>
+                <p>Reservation Schedule</p>
                 <h2>{{ $reservation['trip']['from'] }} → {{ $reservation['trip']['to'] }}</h2>
                 <p class="banner-label">Departure Time</p>
                 <div class="banner-bottom">
@@ -101,7 +93,7 @@
     </div>
 </div>
 
-@if($reservation)
+@if($isPassenger && $reservation)
     @include('partials.ticket', ['ticket' => $reservation, 'open' => false])
 @endif
 @endsection

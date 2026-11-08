@@ -3,6 +3,7 @@
 @section('title', 'Waiting List - SURSEA')
 
 @section('content')
+@php $isPassenger = session('user') && (session('user')['role'] ?? '') === 'passenger'; @endphp
 <div class="container page">
     <div class="wl-top">
         <div>
@@ -10,20 +11,11 @@
             <p class="wl-lead">The Waiting List Module lets passengers queue for a full trip, tracks their position, and automatically moves them to a confirmed reservation, with a notification, when a seat becomes available.</p>
         </div>
 
-        @if($waitlist)
+        @if($isPassenger && $waitlist)
             <div class="wl-banner">
                 <div class="wl-banner-head">
                     <h2>{{ $waitlist['trip']['from'] }} → {{ $waitlist['trip']['to'] }}</h2>
-                    <div class="wl-banner-badges">
-                        <span class="badge green-dark">On Going</span>
-                        <form method="POST" action="{{ route('passenger.reservation.delete') }}" class="banner-delete-form">
-                            @csrf
-                            <input type="hidden" name="target" value="waitlist">
-                            <button type="submit" class="banner-delete-btn" title="Remove from waiting list" aria-label="Remove from waiting list">
-                                @include('partials.icon', ['name' => 'trash'])
-                            </button>
-                        </form>
-                    </div>
+                    <span class="badge green-dark">On Going</span>
                 </div>
                 <div class="wl-banner-grid">
                     <div>
@@ -76,7 +68,7 @@
     </div>
 </div>
 
-@if($waitlist)
+@if($isPassenger && $waitlist)
     @include('partials.ticket', ['ticket' => $waitlist, 'open' => false])
 @endif
 @endsection
