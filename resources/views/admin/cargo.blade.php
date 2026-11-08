@@ -8,13 +8,14 @@
     $pendingCount = count(array_filter($cargos, fn ($c) => $c['status'] === 'Pending'));
     $transitCount = count(array_filter($cargos, fn ($c) => $c['status'] === 'In transit'));
     $deliveredCount = count(array_filter($cargos, fn ($c) => $c['status'] === 'Delivered'));
+    $failedCount = count(array_filter($cargos, fn ($c) => $c['status'] === 'Failed'));
 @endphp
 
 <div class="page-head">
     <div>
         <p class="eyebrow">ADMIN MANAGEMENT</p>
         <h1>Cargo</h1>
-        <p class="subtitle">Monitor cargo registered by passengers, track loading status, and verify deliveries across all operators.</p>
+        <p class="subtitle">Monitor cargo registered by passengers, track loading status, and manage or remove failed cargo processes across all operators.</p>
     </div>
 
     <div class="head-filters">
@@ -54,20 +55,20 @@
     </div>
     <div class="stat-card">
         <div class="stat-top">
-            <p class="stat-label">Delivered</p>
+            <p class="stat-label">Delivered / Failed</p>
             @include('partials.icon', ['name' => 'check-square'])
         </div>
         <p class="stat-number">{{ max(52, $deliveredCount) }}</p>
-        <p class="stat-note">Already received at port</p>
+        <p class="stat-note">{{ $failedCount }} failed process(es)</p>
     </div>
 </div>
 
-{{-- Log new cargo delivery form box --}}
+{{-- Log new cargo delivery form box with dynamic multi-row cargo items + quantity + aligned delete icon --}}
 <section class="box hidden" id="addCargoBox">
     <div class="box-head">
         <div>
             <h2>Log a cargo delivery</h2>
-            <p class="subtitle">Record cargo assigned to a lantsa crossing for weight and safety monitoring.</p>
+            <p class="subtitle">Record cargo assigned to a lantsa crossing with multiple cargo items and quantities.</p>
         </div>
         <button type="button" class="btn btn-outline btn-sm" data-toggle-box="addCargoBox">Close</button>
     </div>
@@ -98,23 +99,13 @@
 
         <div class="form-two">
             <div class="form-field">
-                <label for="items">Cargo items description</label>
-                <input type="text" id="items" name="items" placeholder="e.g. 2 Sacks of Rice, 1 Box of Goods" required>
-            </div>
-            <div class="form-field">
-                <label for="qty">Total quantity (items)</label>
-                <input type="number" id="qty" name="qty" min="1" max="99" value="3" required>
-            </div>
-        </div>
-
-        <div class="form-two">
-            <div class="form-field">
                 <label for="lantsa">Assigned lantsa</label>
                 <select id="lantsa" name="lantsa" class="input-select" style="width: 100%;" required>
                     <option value="MV Isla Norte">MV Isla Norte</option>
                     <option value="MV Marajaw">MV Marajaw</option>
                     <option value="M/B Nonoc Express">M/B Nonoc Express</option>
                     <option value="M/B Alona Waves">M/B Alona Waves</option>
+                    <option value="M/B Island Voyager">M/B Island Voyager</option>
                 </select>
             </div>
             <div class="form-field">
@@ -129,7 +120,11 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-blue">Register cargo</button>
+        @include('partials.panel-cargo-rows', ['listId' => 'adminCargoItemsList'])
+
+        <div style="margin-top: 16px;">
+            <button type="submit" class="btn btn-blue">Register cargo</button>
+        </div>
     </form>
 </section>
 
@@ -137,7 +132,7 @@
     <div class="box-head">
         <div>
             <h2>Cargo deliveries</h2>
-            <p class="subtitle">Track declared cargo items from port check-in to destination delivery.</p>
+            <p class="subtitle">Track declared cargo items from port check-in to destination delivery, or delete failed cargo processes.</p>
         </div>
     </div>
 
@@ -148,6 +143,7 @@
             <option value="Pending">Pending</option>
             <option value="In transit">In transit</option>
             <option value="Delivered">Delivered</option>
+            <option value="Failed">Failed</option>
         </select>
         <a href="{{ route('admin.cargo.export') }}" class="input-select export-link">Export list</a>
     </div>
@@ -198,11 +194,21 @@
                                         <input type="hidden" name="status" value="In transit">
                                         <button type="submit" class="btn btn-blue btn-sm">Load cargo</button>
                                     </form>
+                                    <form method="POST" action="{{ route('admin.cargo.status', $cargo['ref']) }}">
+                                        @csrf
+                                        <input type="hidden" name="status" value="Failed">
+                                        <button type="submit" class="btn btn-outline-red btn-sm">Mark failed</button>
+                                    </form>
                                 @elseif($cargo['status'] === 'In transit')
                                     <form method="POST" action="{{ route('admin.cargo.status', $cargo['ref']) }}">
                                         @csrf
                                         <input type="hidden" name="status" value="Delivered">
                                         <button type="submit" class="btn btn-blue btn-sm">Mark delivered</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.cargo.status', $cargo['ref']) }}">
+                                        @csrf
+                                        <input type="hidden" name="status" value="Failed">
+                                        <button type="submit" class="btn btn-outline-red btn-sm">Mark failed</button>
                                     </form>
                                 @endif
 
@@ -218,7 +224,15 @@
                                     data-items="{{ $cargo['items'] }}"
                                     data-qty="{{ $cargo['qty'] }}"
                                     data-lantsa="{{ $cargo['lantsa'] }}"
+                                    data-fee="₱{{ $cargo['fee'] }}"
                                 >Ticket</button>
+
+                                <form method="POST" action="{{ route('admin.cargo.delete', $cargo['ref']) }}" onsubmit="return confirm('Delete this cargo process record?');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger-outline btn-sm" title="Delete failed or cancelled cargo process">
+                                        @include('partials.icon', ['name' => 'trash']) Delete
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -237,4 +251,3 @@
 
 @include('partials.panel-ticket-modal')
 @endsection
-

@@ -15,7 +15,16 @@
         {{-- Shows after the passenger reserved a seat --}}
         @if($reservation)
             <div class="reserve-banner">
-                <p>Reservation Schedule</p>
+                <div class="banner-head-row">
+                    <p>Reservation Schedule</p>
+                    <form method="POST" action="{{ route('passenger.reservation.delete') }}">
+                        @csrf
+                        <input type="hidden" name="target" value="reservation">
+                        <button type="submit" class="banner-delete-btn" title="Delete reservation" aria-label="Delete reservation">
+                            @include('partials.icon', ['name' => 'trash'])
+                        </button>
+                    </form>
+                </div>
                 <h2>{{ $reservation['trip']['from'] }} → {{ $reservation['trip']['to'] }}</h2>
                 <p class="banner-label">Departure Time</p>
                 <div class="banner-bottom">

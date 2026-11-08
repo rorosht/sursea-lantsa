@@ -110,6 +110,15 @@
             <p class="small-note">Your decision will notify the operator.</p>
         </form>
 
+        <form method="POST" action="{{ route('admin.approvals.delete', $app['id']) }}" class="box" onsubmit="return confirm('Delete this operator application permanently?');">
+            @csrf
+            <h2>Remove application</h2>
+            <p class="subtitle" style="margin-bottom: 12px;">Delete rejected, duplicate, or invalid operator applications from the queue.</p>
+            <button type="submit" class="btn btn-danger-outline btn-block">
+                @include('partials.icon', ['name' => 'trash']) Delete application
+            </button>
+        </form>
+
         <section class="box">
             <h2>Application activity</h2>
             <div class="timeline">
@@ -130,4 +139,3 @@
     </div>
 </div>
 @endsection
-

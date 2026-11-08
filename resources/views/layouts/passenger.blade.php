@@ -14,6 +14,8 @@
 @php
     $user = session('user');
     $isPassenger = $user && $user['role'] === 'passenger';
+    $notifications = $isPassenger ? \App\Support\SampleData::passengerNotifications() : [];
+    $unreadCount = count(array_filter($notifications, fn ($n) => $n['status'] === 'Unread'));
 @endphp
 
 <header class="site-header">
@@ -25,27 +27,51 @@
             <a href="{{ route('schedules') }}" class="{{ request()->routeIs('schedules', 'seat.*', 'cargo.*') ? 'active' : '' }}">Schedules</a>
             <a href="{{ route('waiting-list') }}" class="{{ request()->routeIs('waiting-list', 'waitlist.*') ? 'active' : '' }}">Waiting List</a>
             <a href="{{ route('routes') }}" class="{{ request()->routeIs('routes') ? 'active' : '' }}">Routes</a>
+            @if($isPassenger)
+                <a href="{{ route('passenger.notifications') }}" class="{{ request()->routeIs('passenger.notifications') ? 'active' : '' }}">Notifications</a>
+                <a href="{{ route('passenger.profile') }}" class="{{ request()->routeIs('passenger.profile') ? 'active' : '' }}">Profile</a>
+            @endif
         </nav>
 
         <div class="header-actions">
-            {{-- Bell --}}
+            {{-- Bell Notification Dropdown --}}
             <div class="dropdown">
                 <button type="button" class="icon-btn" data-dropdown-btn="bellMenu" aria-label="Notifications">
                     @include('partials.icon', ['name' => 'bell'])
-                    <span class="bell-dot"></span>
+                    @if(!$isPassenger || $unreadCount > 0)
+                        <span class="bell-dot"></span>
+                    @endif
                 </button>
-                <div class="dropdown-menu" id="bellMenu">
-                    <p class="menu-title">Notifications</p>
-                    @if(session('reservation') && $isPassenger)
-                        <p class="menu-text">Your reservation {{ session('reservation')['ref'] }} is confirmed.</p>
-                    @endif
-                    @if(session('waitlist') && $isPassenger)
-                        <p class="menu-text">You joined the waiting list for {{ session('waitlist')['trip']['from'] }} → {{ session('waitlist')['trip']['to'] }}.</p>
-                    @endif
-                    @if(!$isPassenger)
-                        <p class="menu-text">Log in to see your notifications.</p>
-                    @elseif(!session('reservation') && !session('waitlist'))
-                        <p class="menu-text">No new notifications.</p>
+                <div class="dropdown-menu notif-dropdown" id="bellMenu">
+                    <div class="notif-drop-head">
+                        <div>
+                            <p class="menu-title">Notifications</p>
+                            @if($isPassenger)
+                                <span class="badge amber">{{ $unreadCount }} unread</span>
+                            @endif
+                        </div>
+                        @if($isPassenger)
+                            <a href="{{ route('passenger.notifications') }}" class="notif-drop-all">View all →</a>
+                        @endif
+                    </div>
+
+                    @if($isPassenger)
+                        <div class="notif-drop-list">
+                            @foreach(array_slice($notifications, 0, 4) as $notif)
+                                <a href="{{ $notif['url'] }}" class="notif-drop-item {{ $notif['status'] === 'Unread' ? 'unread' : '' }}">
+                                    <div class="notif-drop-top">
+                                        <strong>{{ $notif['title'] }}</strong>
+                                        <span class="badge {{ \App\Support\SampleData::badge($notif['status']) }}">{{ $notif['status'] }}</span>
+                                    </div>
+                                    <p>{{ $notif['detail'] }}</p>
+                                    <small>{{ $notif['time'] }} · {{ $notif['action_label'] }} →</small>
+                                </a>
+                            @endforeach
+                        </div>
+                        <a href="{{ route('passenger.notifications') }}" class="menu-item notif-center-btn">Open Notifications Center</a>
+                    @else
+                        <p class="menu-text">Log in to view your trip, waiting list, and cargo notifications.</p>
+                        <a href="{{ route('login') }}" class="menu-item notif-center-btn">Log in as passenger</a>
                     @endif
                 </div>
             </div>
@@ -56,13 +82,45 @@
                     <button type="button" class="icon-btn" data-dropdown-btn="userMenu" aria-label="Account">
                         @include('partials.icon', ['name' => 'user-circle'])
                     </button>
-                    <div class="dropdown-menu" id="userMenu">
-                        <p class="menu-title">{{ $user['name'] }}</p>
-                        <p class="menu-text">Passenger account</p>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="menu-item">Log out</button>
-                        </form>
+                    <div class="dropdown-menu user-dropdown-menu profile-dropdown" id="userMenu">
+                        <div class="user-dropdown-header">
+                            <p class="menu-title">{{ $user['name'] }}</p>
+                            <p class="menu-text">{{ $user['email'] }} · Passenger</p>
+                        </div>
+                        <div class="user-dropdown-nav">
+                            <a href="{{ route('passenger.profile', ['tab' => 'settings']) }}" class="menu-item">
+                                @include('partials.icon', ['name' => 'user'])
+                                <span>Profile Settings</span>
+                            </a>
+                            <a href="{{ route('passenger.profile', ['tab' => 'transactions']) }}" class="menu-item">
+                                @include('partials.icon', ['name' => 'ticket'])
+                                <span>Transactions &amp; Tickets</span>
+                            </a>
+                            <a href="{{ route('passenger.profile', ['tab' => 'activity']) }}" class="menu-item">
+                                @include('partials.icon', ['name' => 'clipboard'])
+                                <span>Activity Log</span>
+                            </a>
+                            <a href="{{ route('passenger.profile', ['tab' => 'security']) }}" class="menu-item">
+                                @include('partials.icon', ['name' => 'shield'])
+                                <span>Password &amp; Security</span>
+                            </a>
+                            <a href="{{ route('passenger.notifications') }}" class="menu-item">
+                                @include('partials.icon', ['name' => 'bell'])
+                                <span>Notifications</span>
+                                @if($unreadCount > 0)
+                                    <span class="menu-badge">{{ $unreadCount }}</span>
+                                @endif
+                            </a>
+                        </div>
+                        <div class="user-dropdown-footer">
+                            <form method="POST" action="{{ route('logout') }}" class="logout-form">
+                                @csrf
+                                <button type="submit" class="menu-item logout-item">
+                                    @include('partials.icon', ['name' => 'logout'])
+                                    <span>Log out</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             @elseif($user)
@@ -77,7 +135,7 @@
 
 <main>
     @if(session('status'))
-        <div class="container"><div class="alert success">{{ session('status') }}</div></div>
+        <div class="container" style="padding-top: 18px;"><div class="alert success">{{ session('status') }}</div></div>
     @endif
 
     @yield('content')

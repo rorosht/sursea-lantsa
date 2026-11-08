@@ -13,7 +13,7 @@
     <div>
         <p class="eyebrow">OPERATOR OVERVIEW</p>
         <h1>Waiting list</h1>
-        <p class="subtitle">Passengers waiting for a seat on a full trip. Promote queued passengers when a seat opens.</p>
+        <p class="subtitle">Passengers waiting for a seat on a full trip. Promote queued passengers when a seat opens or remove cancelled entries.</p>
     </div>
 </div>
 
@@ -84,14 +84,23 @@
                             <span class="badge {{ \App\Support\SampleData::badge($row['status']) }}">{{ $row['status'] }}</span>
                         </td>
                         <td>
-                            @if($row['status'] === 'Waiting')
-                                <form method="POST" action="{{ route('operator.waitlist.promote', $row['ref']) }}">
+                            <div class="action-group">
+                                @if($row['status'] === 'Waiting')
+                                    <form method="POST" action="{{ route('operator.waitlist.promote', $row['ref']) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-blue btn-sm">Move to seat</button>
+                                    </form>
+                                @else
+                                    <span class="muted">Seat assigned</span>
+                                @endif
+
+                                <form method="POST" action="{{ route('operator.waitlist.delete', $row['ref']) }}" onsubmit="return confirm('Remove this waiting list entry?');">
                                     @csrf
-                                    <button type="submit" class="btn btn-blue btn-sm">Move to seat</button>
+                                    <button type="submit" class="btn btn-danger-outline btn-sm" title="Delete waiting list entry">
+                                        @include('partials.icon', ['name' => 'trash']) Delete
+                                    </button>
                                 </form>
-                            @else
-                                <span class="muted">Seat assigned</span>
-                            @endif
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -102,4 +111,3 @@
     <p class="table-note">Showing {{ count($waitlist) }} passengers · Example data</p>
 </section>
 @endsection
-

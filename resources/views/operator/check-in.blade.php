@@ -7,8 +7,8 @@
 <div class="page-head">
     <div>
         <p class="eyebrow">OPERATOR OVERVIEW</p>
-        <h1>Passenger check-in</h1>
-        <p class="subtitle">Verify the reservation code of each passenger before boarding MV Isla Norte.</p>
+        <h1>Passenger &amp; ticket check-in</h1>
+        <p class="subtitle">Scan QR tickets for Passengers, Waiting List Passengers, and Cargo before boarding MV Isla Norte.</p>
     </div>
 </div>
 
@@ -27,7 +27,7 @@
             @include('partials.icon', ['name' => 'ticket'])
         </div>
         <p class="stat-number">44</p>
-        <p class="stat-note">Reserved but not yet at the port</p>
+        <p class="stat-note">Reserved &amp; waitlist tickets</p>
     </div>
     <div class="stat-card">
         <div class="stat-top">
@@ -39,22 +39,11 @@
     </div>
 </div>
 
-<section class="box">
-    <div class="box-head">
-        <div>
-            <h2>Verify reservation code</h2>
-            <p class="subtitle">Type or scan the passenger’s ticket reference code to confirm boarding.</p>
-        </div>
-    </div>
-
-    <form method="POST" action="{{ route('operator.checkin.verify') }}" class="verify-bar">
-        @csrf
-        <input type="text" name="ref" class="input-search" placeholder="Enter reservation reference code (e.g. 0000-00003)" required>
-        <button type="submit" class="btn btn-blue">
-            @include('partials.icon', ['name' => 'check']) Verify &amp; check in
-        </button>
-    </form>
-</section>
+@include('partials.qr-scanner-box', [
+    'verifyAction' => route('operator.checkin.verify'),
+    'scannerTitle' => 'QR Ticket Scanner (Passengers, Waiting List & Cargo)',
+    'scannerSubtitle' => 'Scan or upload a QR ticket for reserved passengers, waiting list passengers, or cargo shipments to verify and check in.'
+])
 
 <section class="box">
     <h2>Reservations to verify</h2>
@@ -65,6 +54,8 @@
             <option value="">All statuses</option>
             <option value="Checked in">Checked in</option>
             <option value="Reserved">Reserved</option>
+            <option value="Waiting">Waiting</option>
+            <option value="Moved to seat">Moved to seat</option>
         </select>
         <a href="{{ route('operator.module', 'manifest') }}" class="input-select export-link">Full manifest</a>
     </div>
@@ -77,6 +68,7 @@
                     <th>Passenger</th>
                     <th>Route</th>
                     <th>Passengers</th>
+                    <th>Cargo</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -92,6 +84,7 @@
                         </td>
                         <td>{{ $row['route'] }}</td>
                         <td><strong>{{ $row['passengers'] }}</strong></td>
+                        <td>{{ $row['cargo_desc'] ?? ($row['cargo_qty'] > 0 ? $row['cargo_qty'] . ' items' : 'None') }}</td>
                         <td>
                             <span class="badge {{ \App\Support\SampleData::badge($row['status']) }}">{{ $row['status'] }}</span>
                         </td>
@@ -101,6 +94,7 @@
                                     <form method="POST" action="{{ route('operator.checkin.verify') }}">
                                         @csrf
                                         <input type="hidden" name="ref" value="{{ $row['ref'] }}">
+                                        <input type="hidden" name="ticket_type" value="passenger">
                                         <button type="submit" class="btn btn-blue btn-sm">Check in</button>
                                     </form>
                                 @endif
@@ -118,6 +112,13 @@
                                     data-contact="{{ $row['contact'] }}"
                                     data-total="{{ $row['total'] }}"
                                 >Ticket</button>
+
+                                <form method="POST" action="{{ route('operator.checkin.delete', $row['ref']) }}" onsubmit="return confirm('Delete this reservation check-in record?');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger-outline btn-sm" title="Delete reservation">
+                                        @include('partials.icon', ['name' => 'trash']) Delete
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -131,4 +132,3 @@
 
 @include('partials.panel-ticket-modal')
 @endsection
-

@@ -20,7 +20,7 @@ class PassengerController extends Controller
     {
         return view('passenger.home', [
             'places' => SampleData::places(),
-            'board' => array_slice(SampleData::routeBoard(), 0, 4), // first 4 rows only
+            'board' => array_slice(SampleData::routeBoard(), 0, 4),
         ]);
     }
 
@@ -29,7 +29,6 @@ class PassengerController extends Controller
         $from = $request->query('from', 'all');
         $to = $request->query('to', 'all');
 
-        // Keep only the trips that match the search
         $trips = array_filter(SampleData::trips(), function ($trip) use ($from, $to) {
             $fromOk = ($from === 'all' || $trip['from'] === $from);
             $toOk = ($to === 'all' || $trip['to'] === $to);
@@ -82,7 +81,6 @@ class PassengerController extends Controller
     {
         $trip = $this->findTrip($id);
 
-        // A full trip cannot be reserved, only waitlisted
         if ($trip['status'] === 'Full' || $trip['left'] < 1) {
             return redirect()->route('waitlist.form', $trip['id']);
         }
@@ -106,6 +104,11 @@ class PassengerController extends Controller
         $booked[$trip['id']] = ($booked[$trip['id']] ?? 0) + (int) $data['passengers'];
         session(['trip_booked_seats' => $booked]);
 
+        $items = $this->cargoItems($data);
+        $cargoDesc = count($items) > 0
+            ? implode(', ', array_map(fn ($i) => $i['name'].' ('.$i['qty'].')', $items))
+            : 'None';
+
         // Also record in the live Passenger Manifest for Operator & Admin portals
         $customManifests = session('custom_manifests', []);
         array_unshift($customManifests, [
@@ -118,15 +121,58 @@ class PassengerController extends Controller
             'lantsa' => $trip['lantsa'],
             'passengers' => $ticket['passengers'],
             'cargo_qty' => $ticket['cargo_qty'],
+            'cargo_desc' => $cargoDesc,
             'total' => $ticket['total'],
             'status' => 'Reserved',
         ]);
+
+        $customTx = session('passenger_transactions', []);
+        array_unshift($customTx, [
+            'id' => 'TX-'.(10 + count($customTx)),
+            'ref' => $ref,
+            'category' => 'Seat Reservation',
+            'type' => 'passenger',
+            'name' => $ticket['name'],
+            'contact' => $ticket['contact'],
+            'route' => $trip['from'].' → '.$trip['to'],
+            'date' => $trip['date'].', '.strtoupper($trip['departure']),
+            'lantsa' => $trip['lantsa'],
+            'passengers' => $ticket['passengers'],
+            'cargo_qty' => $ticket['cargo_qty'],
+            'items' => $cargoDesc,
+            'total' => $ticket['total'],
+            'status' => 'Reserved',
+        ]);
+
         session([
             'custom_manifests' => $customManifests,
+            'passenger_transactions' => $customTx,
             'reservation' => $ticket,
         ]);
 
         return redirect()->route('seat.form', $trip['id'])->with('show_ticket', true);
+    }
+
+    public function seatCancel()
+    {
+        session()->forget('reservation');
+
+        return redirect()->route('schedules')
+            ->with('status', 'Your active seat reservation has been removed.');
+    }
+
+    public function reservationDelete(Request $request)
+    {
+        $target = $request->input('target', 'reservation');
+        if ($target === 'waitlist') {
+            session()->forget('waitlist');
+            return redirect()->route('waiting-list')
+                ->with('status', 'Your waiting list entry has been removed.');
+        }
+
+        session()->forget('reservation');
+        return redirect()->route('schedules')
+            ->with('status', 'Your active seat reservation has been removed.');
     }
 
     // ---------------------------------------------------------------
@@ -158,7 +204,11 @@ class PassengerController extends Controller
         $ref = sprintf('0000-%05d', $number);
         $ticket = $this->passengerTicket($trip, $data, $ref, true);
 
-        // Add to waiting list records for Operator & Admin portals
+        $items = $this->cargoItems($data);
+        $cargoDesc = count($items) > 0
+            ? implode(', ', array_map(fn ($i) => $i['name'].' ('.$i['qty'].')', $items))
+            : 'None';
+
         $customWaitlist = session('custom_waitlist', []);
         $customWaitlist[] = [
             'id' => 'WL-'.(10 + count($customWaitlist)),
@@ -169,6 +219,7 @@ class PassengerController extends Controller
             'route' => $trip['from'].' → '.$trip['to'],
             'lantsa' => $trip['lantsa'],
             'passengers' => $ticket['passengers'],
+            'cargo_qty' => $ticket['cargo_qty'],
             'status' => 'Waiting',
         ];
 
@@ -183,6 +234,25 @@ class PassengerController extends Controller
             'lantsa' => $trip['lantsa'],
             'passengers' => $ticket['passengers'],
             'cargo_qty' => $ticket['cargo_qty'],
+            'cargo_desc' => $cargoDesc,
+            'total' => $ticket['total'],
+            'status' => 'Waiting',
+        ]);
+
+        $customTx = session('passenger_transactions', []);
+        array_unshift($customTx, [
+            'id' => 'TX-'.(10 + count($customTx)),
+            'ref' => $ref,
+            'category' => 'Waitlist Reservation',
+            'type' => 'passenger',
+            'name' => $ticket['name'],
+            'contact' => $ticket['contact'],
+            'route' => $trip['from'].' → '.$trip['to'],
+            'date' => $trip['date'].', '.strtoupper($trip['departure']),
+            'lantsa' => $trip['lantsa'],
+            'passengers' => $ticket['passengers'],
+            'cargo_qty' => $ticket['cargo_qty'],
+            'items' => $cargoDesc,
             'total' => $ticket['total'],
             'status' => 'Waiting',
         ]);
@@ -190,10 +260,19 @@ class PassengerController extends Controller
         session([
             'custom_waitlist' => $customWaitlist,
             'custom_manifests' => $customManifests,
+            'passenger_transactions' => $customTx,
             'waitlist' => $ticket,
         ]);
 
         return redirect()->route('waitlist.form', $trip['id'])->with('show_ticket', true);
+    }
+
+    public function waitlistCancel()
+    {
+        session()->forget('waitlist');
+
+        return redirect()->route('waiting-list')
+            ->with('notice', 'Your waiting list entry has been removed.');
     }
 
     // ---------------------------------------------------------------
@@ -226,9 +305,9 @@ class PassengerController extends Controller
             return back()->withErrors(['cargo_name' => 'Please add at least one cargo item.'])->withInput();
         }
 
-        $names = array_column($items, 'name');
+        $formattedItems = array_map(fn ($i) => $i['name'].' ('.$i['qty'].')', $items);
         $qty = array_sum(array_column($items, 'qty'));
-        $number = $this->nextNumber('cargo_counter', 110); // first tracking ID = 0000-00111
+        $number = $this->nextNumber('cargo_counter', 110);
         $ref = sprintf('0000-%05d', $number);
 
         $cargoTicket = [
@@ -238,7 +317,7 @@ class PassengerController extends Controller
             'sender_contact' => $data['sender_contact'],
             'receiver' => $data['receiver_name'],
             'receiver_contact' => $data['receiver_contact'],
-            'items' => implode(', ', $names),
+            'items' => implode(', ', $formattedItems),
             'qty' => $qty,
             'route' => $trip['from'].' → '.$trip['to'],
             'departure' => strtoupper($trip['departure']),
@@ -250,12 +329,145 @@ class PassengerController extends Controller
         $customCargos = session('custom_cargos', []);
         array_unshift($customCargos, $cargoTicket);
 
+        $customTx = session('passenger_transactions', []);
+        array_unshift($customTx, [
+            'id' => 'TX-'.(10 + count($customTx)),
+            'ref' => $ref,
+            'category' => 'Cargo Delivery',
+            'type' => 'cargo',
+            'name' => $data['sender_name'],
+            'sender' => $data['sender_name'],
+            'sender_contact' => $data['sender_contact'],
+            'receiver' => $data['receiver_name'],
+            'receiver_contact' => $data['receiver_contact'],
+            'route' => $trip['from'].' → '.$trip['to'],
+            'date' => $trip['date'].', '.strtoupper($trip['departure']),
+            'lantsa' => $trip['lantsa'],
+            'passengers' => 0,
+            'cargo_qty' => $qty,
+            'qty' => $qty,
+            'items' => implode(', ', $formattedItems),
+            'total' => $qty * self::CARGO_FEE,
+            'status' => 'Pending',
+        ]);
+
         session([
             'custom_cargos' => $customCargos,
+            'passenger_transactions' => $customTx,
             'cargo' => $cargoTicket,
         ]);
 
         return redirect()->route('cargo.form', $trip['id'])->with('show_ticket', true);
+    }
+
+    // ---------------------------------------------------------------
+    // PASSENGER NOTIFICATIONS & PROFILE HUB
+    // ---------------------------------------------------------------
+
+    public function notifications()
+    {
+        return view('passenger.notifications', [
+            'notifications' => SampleData::passengerNotifications(),
+        ]);
+    }
+
+    public function notificationRead(string $id)
+    {
+        $read = session('passenger_notif_read', []);
+        if (! in_array($id, $read, true)) {
+            $read[] = $id;
+        }
+        session(['passenger_notif_read' => $read]);
+
+        return redirect()->route('passenger.notifications')
+            ->with('status', 'Notification marked as read.');
+    }
+
+    public function notificationsReadAll()
+    {
+        session(['passenger_notif_all_read' => true]);
+
+        return redirect()->route('passenger.notifications')
+            ->with('status', 'All notifications marked as read.');
+    }
+
+    public function profile()
+    {
+        $baseUser = session('user', [
+            'name' => 'Robert Zabala',
+            'username' => 'robertzabala',
+            'email' => 'passenger@sursea.example',
+            'contact' => '09123123123',
+        ]);
+        $profileUser = array_merge($baseUser, session('passenger_profile', []));
+
+        return view('passenger.profile', [
+            'user' => $profileUser,
+            'transactions' => SampleData::passengerTransactions(),
+            'activities' => SampleData::passengerActivityLog(),
+        ]);
+    }
+
+    public function profileSave(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'username' => 'required|string|max:60',
+            'email' => 'required|email|max:100',
+            'contact' => 'required|string|max:25',
+            'address' => 'nullable|string|max:150',
+            'emergency_contact' => 'nullable|string|max:100',
+        ]);
+
+        session(['passenger_profile' => $data]);
+
+        $user = session('user', []);
+        $user['name'] = $data['name'];
+        $user['username'] = $data['username'];
+        $user['email'] = $data['email'];
+        $user['contact'] = $data['contact'];
+        session(['user' => $user]);
+
+        return redirect()->route('passenger.profile', ['tab' => 'settings'])
+            ->with('status', 'Passenger profile details updated.');
+    }
+
+    public function profilePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'nullable|string|min:6|confirmed',
+            'new_password' => 'nullable|string|min:6|confirmed',
+        ]);
+
+        return redirect()->route('passenger.profile', ['tab' => 'security'])
+            ->with('status', 'Your account password has been updated.');
+    }
+
+    public function profileSettings(Request $request)
+    {
+        session([
+            'passenger_prefs' => [
+                'sms_alerts' => $request->boolean('sms_alerts'),
+                'email_receipts' => $request->boolean('email_receipts'),
+                'waitlist_auto' => $request->boolean('waitlist_auto'),
+            ],
+        ]);
+
+        return redirect()->route('passenger.profile')
+            ->with('status', 'Notification and booking preferences saved.');
+    }
+
+    public function transactionDelete(string $ref)
+    {
+        $deleted = session('deleted_passenger_tx', []);
+        if (! in_array($ref, $deleted, true)) {
+            $deleted[] = $ref;
+        }
+        session(['deleted_passenger_tx' => $deleted]);
+
+        return redirect()->route('passenger.profile')
+            ->with('status', 'Transaction '.$ref.' removed from your history.');
     }
 
     // ---------------------------------------------------------------
@@ -270,7 +482,6 @@ class PassengerController extends Controller
         return $trip;
     }
 
-    // Counts up: 1, 2, 3 ... and remembers the number in the session
     private function nextNumber(string $key, int $start): int
     {
         $number = session($key, $start) + 1;
@@ -279,7 +490,6 @@ class PassengerController extends Controller
         return $number;
     }
 
-    // Turns the cargo_name[] and cargo_qty[] form fields into a clean list
     private function cargoItems(array $data): array
     {
         $items = [];
@@ -287,7 +497,7 @@ class PassengerController extends Controller
         foreach (($data['cargo_name'] ?? []) as $index => $name) {
             $name = trim((string) $name);
             if ($name === '') {
-                continue; // skip empty rows
+                continue;
             }
             $qty = (int) ($data['cargo_qty'][$index] ?? 1);
             $items[] = ['name' => $name, 'qty' => $qty > 0 ? $qty : 1];
@@ -296,7 +506,6 @@ class PassengerController extends Controller
         return $items;
     }
 
-    // Builds the data shown on the "Passenger Reservation Ticket"
     private function passengerTicket(array $trip, array $data, string $ref, bool $isWaitlist): array
     {
         $items = $this->cargoItems($data);

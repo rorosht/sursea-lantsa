@@ -8,7 +8,7 @@
     <div>
         <p class="eyebrow">OPERATOR OVERVIEW</p>
         <h1>Passenger manifest</h1>
-        <p class="subtitle">The official passenger list of MV Isla Norte across today’s crossings.</p>
+        <p class="subtitle">The official passenger and baggage/cargo manifest of MV Isla Norte across today’s crossings.</p>
     </div>
     <a href="{{ route('operator.manifest.export') }}" class="btn btn-blue">
         Export manifest @include('partials.icon', ['name' => 'download'])
@@ -46,7 +46,7 @@
     <h2>Passenger list</h2>
 
     <div class="toolbar">
-        <input type="text" id="tableSearch" class="input-search" placeholder="Search passenger, contact, or reference code">
+        <input type="text" id="tableSearch" class="input-search" placeholder="Search passenger, contact, cargo, or reference code">
         <select id="tableStatus" class="input-select">
             <option value="">All statuses</option>
             <option value="Checked in">Checked in</option>
@@ -66,6 +66,7 @@
                     <th>Contact</th>
                     <th>Route</th>
                     <th>Passengers</th>
+                    <th>Cargo</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -77,24 +78,33 @@
                         <td><strong>{{ $row['name'] }}</strong></td>
                         <td>{{ $row['contact'] }}</td>
                         <td>{{ $row['route'] }}</td>
-                        <td>{{ $row['passengers'] }}</td>
+                        <td><strong>{{ $row['passengers'] }}</strong></td>
+                        <td>
+                            @if(($row['cargo_qty'] ?? 0) > 0)
+                                <span class="badge blue">{{ $row['cargo_desc'] ?? ($row['cargo_qty'] . ' items') }}</span>
+                            @else
+                                <span class="muted">None</span>
+                            @endif
+                        </td>
                         <td>
                             <span class="badge {{ \App\Support\SampleData::badge($row['status']) }}">{{ $row['status'] }}</span>
                         </td>
                         <td>
-                            <button
-                                type="button"
-                                class="btn btn-outline btn-sm"
-                                data-preview-ticket="passenger"
-                                data-ref="{{ $row['ref'] }}"
-                                data-name="{{ $row['name'] }}"
-                                data-passengers="{{ $row['passengers'] }}"
-                                data-cargo="{{ $row['cargo_qty'] }}"
-                                data-route="{{ $row['route'] }}, {{ $row['date'] }}, {{ $row['departure'] }}"
-                                data-lantsa="{{ $row['lantsa'] }}"
-                                data-contact="{{ $row['contact'] }}"
-                                data-total="{{ $row['total'] }}"
-                            >View ticket</button>
+                            <div class="action-group">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline btn-sm"
+                                    data-preview-ticket="passenger"
+                                    data-ref="{{ $row['ref'] }}"
+                                    data-name="{{ $row['name'] }}"
+                                    data-passengers="{{ $row['passengers'] }}"
+                                    data-cargo="{{ $row['cargo_qty'] }}"
+                                    data-route="{{ $row['route'] }}, {{ $row['date'] }}, {{ $row['departure'] }}"
+                                    data-lantsa="{{ $row['lantsa'] }}"
+                                    data-contact="{{ $row['contact'] }}"
+                                    data-total="{{ $row['total'] }}"
+                                >View ticket</button>
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -107,4 +117,3 @@
 
 @include('partials.panel-ticket-modal')
 @endsection
-

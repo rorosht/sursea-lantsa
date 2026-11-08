@@ -18,7 +18,7 @@ class AdminController extends Controller
     }
 
     // ---------------------------------------------------------------
-    // OPERATOR APPROVALS
+    // OPERATOR APPROVALS & ROUTE REQUESTS
     // ---------------------------------------------------------------
 
     public function approvals()
@@ -61,9 +61,46 @@ class AdminController extends Controller
             $request->session()->put('decision_notes', $notes);
         }
 
-        return redirect()
-            ->route('admin.approvals.show', $id)
+        return redirect()->back()
             ->with('status', 'Application '.$id.' updated to "'.$data['decision'].'".');
+    }
+
+    public function approvalDelete(string $id)
+    {
+        $deleted = session('deleted_applications', []);
+        if (! in_array($id, $deleted, true)) {
+            $deleted[] = $id;
+        }
+        session(['deleted_applications' => $deleted]);
+
+        return redirect()->route('admin.approvals')
+            ->with('status', 'Operator application '.$id.' deleted.');
+    }
+
+    public function routeRequestDecide(Request $request, string $id)
+    {
+        $data = $request->validate([
+            'decision' => 'required|in:Approved,Rejected',
+        ]);
+
+        $decisions = session('route_request_decisions', []);
+        $decisions[$id] = $data['decision'];
+        session(['route_request_decisions' => $decisions]);
+
+        return redirect()->back()
+            ->with('status', 'Operator route request '.$id.' marked as '.$data['decision'].'.');
+    }
+
+    public function routeRequestDelete(string $id)
+    {
+        $deleted = session('route_request_deleted', []);
+        if (! in_array($id, $deleted, true)) {
+            $deleted[] = $id;
+        }
+        session(['route_request_deleted' => $deleted]);
+
+        return redirect()->back()
+            ->with('status', 'Operator route request '.$id.' deleted.');
     }
 
     // ---------------------------------------------------------------
@@ -112,7 +149,7 @@ class AdminController extends Controller
     }
 
     // ---------------------------------------------------------------
-    // WORKSPACE SETTINGS
+    // WORKSPACE SETTINGS, ACCOUNT MANAGEMENT & PROFILE
     // ---------------------------------------------------------------
 
     public function settings()
@@ -136,6 +173,109 @@ class AdminController extends Controller
         return redirect()->route('admin.settings')->with('status', 'Workspace settings saved.');
     }
 
+    public function accountStore(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'email' => 'required|email|max:100',
+            'role' => 'required|in:Admin,Operator,Passenger',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $accounts = session('admin_managed_accounts', [
+            ['id' => 'ACC-1', 'name' => 'Administrator', 'email' => 'admin@sursea.example', 'role' => 'Admin', 'status' => 'Active'],
+            ['id' => 'ACC-2', 'name' => 'Isla Norte Operator', 'email' => 'islanorte@sursea.example', 'role' => 'Operator', 'status' => 'Active'],
+            ['id' => 'ACC-3', 'name' => 'Marajaw Operator', 'email' => 'marajaw@sursea.example', 'role' => 'Operator', 'status' => 'Active'],
+            ['id' => 'ACC-4', 'name' => 'Robert Zabala', 'email' => 'passenger@sursea.example', 'role' => 'Passenger', 'status' => 'Active'],
+        ]);
+
+        $accounts[] = [
+            'id' => 'ACC-'.(count($accounts) + 1),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'role' => $data['role'],
+            'status' => 'Active',
+        ];
+        session(['admin_managed_accounts' => $accounts]);
+
+        return redirect()->route('admin.settings')
+            ->with('status', 'Account created for '.$data['name'].' ('.$data['role'].').');
+    }
+
+    public function accountDelete(string $id)
+    {
+        $accounts = session('admin_managed_accounts', [
+            ['id' => 'ACC-1', 'name' => 'Administrator', 'email' => 'admin@sursea.example', 'role' => 'Admin', 'status' => 'Active'],
+            ['id' => 'ACC-2', 'name' => 'Isla Norte Operator', 'email' => 'islanorte@sursea.example', 'role' => 'Operator', 'status' => 'Active'],
+            ['id' => 'ACC-3', 'name' => 'Marajaw Operator', 'email' => 'marajaw@sursea.example', 'role' => 'Operator', 'status' => 'Active'],
+            ['id' => 'ACC-4', 'name' => 'Robert Zabala', 'email' => 'passenger@sursea.example', 'role' => 'Passenger', 'status' => 'Active'],
+        ]);
+
+        $accounts = array_values(array_filter($accounts, fn ($a) => $a['id'] !== $id));
+        session(['admin_managed_accounts' => $accounts]);
+
+        return redirect()->route('admin.settings')
+            ->with('status', 'Account '.$id.' removed.');
+    }
+
+    public function passwordUpdate(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        return redirect()->back()
+            ->with('status', 'Administrator password updated.');
+    }
+
+    public function profile()
+    {
+        return view('admin.profile');
+    }
+
+    public function profileSave(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'title' => 'required|string|max:120',
+            'email' => 'required|email|max:100',
+            'contact' => 'required|string|max:30',
+            'department' => 'required|string|max:120',
+            'office' => 'required|string|max:150',
+        ]);
+
+        session(['admin_profile' => $data]);
+
+        $user = session('user', []);
+        $user['name'] = $data['name'];
+        $user['email'] = $data['email'];
+        session(['user' => $user]);
+
+        return redirect()->route('admin.profile')
+            ->with('status', 'Administrator profile updated.');
+    }
+
+    public function notificationRead(string $id)
+    {
+        $read = session('admin_notif_read', []);
+        if (! in_array($id, $read, true)) {
+            $read[] = $id;
+        }
+        session(['admin_notif_read' => $read]);
+
+        return redirect()->route('admin.module', 'notifications')
+            ->with('status', 'Notification marked as read.');
+    }
+
+    public function notificationsReadAll()
+    {
+        session(['admin_notif_all_read' => true]);
+
+        return redirect()->route('admin.module', 'notifications')
+            ->with('status', 'All notifications marked as read.');
+    }
+
     // ---------------------------------------------------------------
     // MODULES: LANTSA & ROUTES, TRIP SCHEDULE, MANIFEST, CARGO, NOTIFICATIONS
     // ---------------------------------------------------------------
@@ -156,6 +296,7 @@ class AdminController extends Controller
             'cargo' => view('admin.cargo', [
                 'cargos' => SampleData::cargoRecords(),
             ]),
+            'notifications' => view('panel.notifications'),
             default => $this->genericModule($module),
         };
     }
@@ -175,8 +316,10 @@ class AdminController extends Controller
         $data = $request->validate([
             'lantsa' => 'required|string|max:100',
             'operator' => 'required|string|max:100',
+            'type' => 'required|in:Passenger & Cargo,Passenger Only,Cargo Only',
             'route' => 'required|string|max:100',
-            'seats' => 'required|integer|min:10|max:200',
+            'seats' => 'required|integer|min:0|max:200',
+            'port' => 'nullable|string|max:100',
         ]);
 
         $custom = session('custom_lantsas', []);
@@ -184,17 +327,18 @@ class AdminController extends Controller
             'id' => 'LR-'.(10 + count($custom)),
             'lantsa' => $data['lantsa'],
             'operator' => $data['operator'],
+            'type' => $data['type'],
             'route' => $data['route'],
-            'port' => 'Surigao City Port',
-            'seats' => (int) $data['seats'],
-            'cargo_limit' => '40 items',
+            'port' => $data['port'] ?? 'Surigao City Port',
+            'seats' => $data['type'] === 'Cargo Only' ? 0 : (int) $data['seats'],
+            'cargo_limit' => $data['type'] === 'Passenger Only' ? '0 items' : '60 items',
             'fare' => 150,
             'status' => 'Active',
         ]);
         session(['custom_lantsas' => $custom]);
 
         return redirect()->route('admin.module', 'lantsa-routes')
-            ->with('status', $data['lantsa'].' was registered and assigned to '.$data['route'].'.');
+            ->with('status', $data['lantsa'].' ('.$data['type'].') was registered and assigned to '.$data['route'].'.');
     }
 
     public function lantsaStatus(Request $request, string $id)
@@ -206,6 +350,18 @@ class AdminController extends Controller
 
         return redirect()->route('admin.module', 'lantsa-routes')
             ->with('status', 'Vessel operating status updated to '.$data['status'].'.');
+    }
+
+    public function lantsaDelete(string $id)
+    {
+        $deleted = session('lantsa_deleted', []);
+        if (! in_array($id, $deleted, true)) {
+            $deleted[] = $id;
+        }
+        session(['lantsa_deleted' => $deleted]);
+
+        return redirect()->route('admin.module', 'lantsa-routes')
+            ->with('status', 'Vessel '.$id.' removed from directory.');
     }
 
     // ---------- TRIP SCHEDULE ACTIONS ----------
@@ -269,7 +425,7 @@ class AdminController extends Controller
         return $this->csvDownload('sursea-trip-schedules.csv', $rows);
     }
 
-    // ---------- PASSENGER MANIFEST ACTIONS ----------
+    // ---------- PASSENGER MANIFEST & QR SCANNER ACTIONS ----------
 
     public function manifestStore(Request $request)
     {
@@ -294,6 +450,7 @@ class AdminController extends Controller
             'lantsa' => $data['lantsa'],
             'passengers' => (int) $data['passengers'],
             'cargo_qty' => 0,
+            'cargo_desc' => 'None',
             'total' => ((int) $data['passengers']) * 150,
             'status' => $data['status'],
         ]);
@@ -305,28 +462,41 @@ class AdminController extends Controller
 
     public function manifestVerify(Request $request)
     {
-        $data = $request->validate(['ref' => 'required|string|max:30']);
+        $data = $request->validate([
+            'ref' => 'required|string|max:40',
+            'ticket_type' => 'nullable|in:auto,passenger,waitlist,cargo',
+        ]);
         $ref = trim($data['ref']);
+        $ticketType = $data['ticket_type'] ?? 'passenger';
 
-        $found = null;
-        foreach (SampleData::manifestRecords() as $m) {
-            if (strcasecmp($m['ref'], $ref) === 0) {
-                $found = $m;
-                break;
+        // 1. Check Cargo tickets
+        foreach (SampleData::cargoRecords() as $c) {
+            if (strcasecmp($c['ref'], $ref) === 0) {
+                $statuses = session('cargo_statuses', []);
+                $statuses[$c['ref']] = 'In transit';
+                session(['cargo_statuses' => $statuses]);
+
+                return redirect()->route('admin.module', 'passenger-manifest')
+                    ->with('status', 'QR Ticket Verified [CARGO]: Tracking '.$c['ref'].' ('.$c['items'].', '.$c['qty'].' items on '.$c['lantsa'].') verified and marked In transit.');
             }
         }
 
-        if (! $found) {
-            return redirect()->route('admin.module', 'passenger-manifest')
-                ->with('status', 'Reference code "'.$ref.'" was not found in today’s manifest.');
+        // 2. Check Passenger & Waitlist tickets
+        foreach (SampleData::manifestRecords() as $m) {
+            if (strcasecmp($m['ref'], $ref) === 0) {
+                $statuses = session('manifest_statuses', []);
+                $statuses[$m['ref']] = 'Checked in';
+                session(['manifest_statuses' => $statuses]);
+
+                $label = ($m['status'] === 'Waiting' || $ticketType === 'waitlist') ? 'WAITLIST PASSENGER' : 'PASSENGER';
+
+                return redirect()->route('admin.module', 'passenger-manifest')
+                    ->with('status', 'QR Ticket Verified ['.$label.'] '.$m['ref'].': '.$m['name'].' ('.$m['passengers'].' pax) is now Checked in for '.$m['lantsa'].'.');
+            }
         }
 
-        $statuses = session('manifest_statuses', []);
-        $statuses[$found['ref']] = 'Checked in';
-        session(['manifest_statuses' => $statuses]);
-
         return redirect()->route('admin.module', 'passenger-manifest')
-            ->with('status', 'Verified '.$found['ref'].': '.$found['name'].' ('.$found['passengers'].' pax) is now Checked in for '.$found['lantsa'].'.');
+            ->with('status', 'QR Ticket / Reference "'.$ref.'" was not found in Passenger, Waiting List, or Cargo records.');
     }
 
     public function manifestStatus(Request $request, string $ref)
@@ -341,11 +511,23 @@ class AdminController extends Controller
             ->with('status', 'Reservation '.$ref.' updated to "'.$data['status'].'".');
     }
 
+    public function manifestDelete(string $ref)
+    {
+        $deleted = session('manifest_deleted', []);
+        if (! in_array($ref, $deleted, true)) {
+            $deleted[] = $ref;
+        }
+        session(['manifest_deleted' => $deleted]);
+
+        return redirect()->route('admin.module', 'passenger-manifest')
+            ->with('status', 'Manifest entry '.$ref.' deleted.');
+    }
+
     public function manifestExport()
     {
-        $rows = [['Reference Code', 'Passenger Name', 'Contact', 'Route', 'Departure', 'Lantsa', 'Passengers', 'Cargo Qty', 'Total Paid', 'Status']];
+        $rows = [['Reference Code', 'Passenger Name', 'Contact', 'Route', 'Departure', 'Lantsa', 'Passengers', 'Cargo', 'Total Paid', 'Status']];
         foreach (SampleData::manifestRecords() as $m) {
-            $rows[] = [$m['ref'], $m['name'], $m['contact'], $m['route'], $m['departure'], $m['lantsa'], $m['passengers'], $m['cargo_qty'], $m['total'], $m['status']];
+            $rows[] = [$m['ref'], $m['name'], $m['contact'], $m['route'], $m['departure'], $m['lantsa'], $m['passengers'], $m['cargo_desc'] ?? 'None', $m['total'], $m['status']];
         }
 
         return $this->csvDownload('sursea-passenger-manifest.csv', $rows);
@@ -360,11 +542,34 @@ class AdminController extends Controller
             'sender_contact' => 'required|string|max:20',
             'receiver' => 'required|string|max:100',
             'receiver_contact' => 'required|string|max:20',
-            'items' => 'required|string|max:150',
-            'qty' => 'required|integer|min:1|max:99',
             'lantsa' => 'required|string|max:100',
             'route' => 'required|string|max:100',
+            'cargo_name' => 'nullable|array',
+            'cargo_name.*' => 'nullable|string|max:80',
+            'cargo_qty' => 'nullable|array',
+            'cargo_qty.*' => 'nullable|integer|min:1|max:99',
+            'items' => 'nullable|string|max:150',
+            'qty' => 'nullable|integer|min:1|max:99',
         ]);
+
+        $parsedItems = [];
+        $totalQty = 0;
+        foreach (($data['cargo_name'] ?? []) as $idx => $cName) {
+            $cName = trim((string) $cName);
+            if ($cName === '') {
+                continue;
+            }
+            $cQty = max(1, (int) ($data['cargo_qty'][$idx] ?? 1));
+            $parsedItems[] = $cName.' ('.$cQty.')';
+            $totalQty += $cQty;
+        }
+
+        if (empty($parsedItems)) {
+            $itemsText = $data['items'] ?? 'General Cargo';
+            $totalQty = max(1, (int) ($data['qty'] ?? 1));
+        } else {
+            $itemsText = implode(', ', $parsedItems);
+        }
 
         $custom = session('custom_cargos', []);
         $ref = sprintf('0000-%05d', 120 + count($custom));
@@ -374,23 +579,23 @@ class AdminController extends Controller
             'sender_contact' => $data['sender_contact'],
             'receiver' => $data['receiver'],
             'receiver_contact' => $data['receiver_contact'],
-            'items' => $data['items'],
-            'qty' => (int) $data['qty'],
+            'items' => $itemsText,
+            'qty' => $totalQty,
             'route' => $data['route'],
             'departure' => '12:00 PM',
             'lantsa' => $data['lantsa'],
-            'fee' => ((int) $data['qty']) * 25,
+            'fee' => $totalQty * 25,
             'status' => 'Pending',
         ]);
         session(['custom_cargos' => $custom]);
 
         return redirect()->route('admin.module', 'cargo')
-            ->with('status', 'Cargo delivery '.$ref.' registered for '.$data['lantsa'].'.');
+            ->with('status', 'Cargo delivery '.$ref.' ('.$itemsText.') registered for '.$data['lantsa'].'.');
     }
 
     public function cargoStatus(Request $request, string $ref)
     {
-        $data = $request->validate(['status' => 'required|in:Pending,In transit,Delivered']);
+        $data = $request->validate(['status' => 'required|in:Pending,In transit,Delivered,Failed']);
 
         $statuses = session('cargo_statuses', []);
         $statuses[$ref] = $data['status'];
@@ -398,6 +603,18 @@ class AdminController extends Controller
 
         return redirect()->route('admin.module', 'cargo')
             ->with('status', 'Cargo '.$ref.' status updated to "'.$data['status'].'".');
+    }
+
+    public function cargoDelete(string $ref)
+    {
+        $deleted = session('cargo_deleted', []);
+        if (! in_array($ref, $deleted, true)) {
+            $deleted[] = $ref;
+        }
+        session(['cargo_deleted' => $deleted]);
+
+        return redirect()->route('admin.module', 'cargo')
+            ->with('status', 'Cargo process '.$ref.' deleted.');
     }
 
     public function cargoExport()

@@ -8,7 +8,7 @@
     <div>
         <p class="eyebrow">OPERATOR OVERVIEW</p>
         <h1>Trip schedule</h1>
-        <p class="subtitle">Monitor and update today’s crossings and remaining seat capacity for MV Isla Norte.</p>
+        <p class="subtitle">Monitor and update today’s crossings, seat capacity, and trip availability for MV Isla Norte.</p>
     </div>
 
     <button type="button" class="btn btn-blue" data-toggle-box="opAddTripBox">
@@ -43,11 +43,12 @@
     </div>
 </div>
 
+{{-- Add Trip Form (with capacity and status) --}}
 <section class="box hidden" id="opAddTripBox">
     <div class="box-head">
         <div>
             <h2>Add crossing for MV Isla Norte</h2>
-            <p class="subtitle">Schedule a departure on one of your approved routes.</p>
+            <p class="subtitle">Schedule a departure on one of your approved routes with seat capacity and status.</p>
         </div>
         <button type="button" class="btn btn-outline btn-sm" data-toggle-box="opAddTripBox">Close</button>
     </div>
@@ -70,7 +71,76 @@
                 <input type="text" id="departure" name="departure" value="04:30 PM" required>
             </div>
         </div>
+        <div class="form-two">
+            <div class="form-field">
+                <label for="capacity">Seat capacity</label>
+                <input type="number" id="capacity" name="capacity" min="1" max="200" value="40" required>
+            </div>
+            <div class="form-field">
+                <label for="status">Trip status</label>
+                <select id="status" name="status" class="input-select" style="width: 100%;" required>
+                    <option value="Available">Available</option>
+                    <option value="Almost Full">Almost Full</option>
+                    <option value="Boarding">Boarding</option>
+                    <option value="On Going">On Going</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Not Available">Not Available</option>
+                </select>
+            </div>
+        </div>
         <button type="submit" class="btn btn-blue">Save crossing</button>
+    </form>
+</section>
+
+{{-- Edit Trip Form --}}
+<section class="box hidden" id="opEditTripBox">
+    <div class="box-head">
+        <div>
+            <h2>Edit trip schedule</h2>
+            <p class="subtitle">Update departure time, route, seat capacity, or status for this crossing.</p>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" data-toggle-box="opEditTripBox">Close</button>
+    </div>
+
+    <form method="POST" action="{{ route('operator.trips.update') }}">
+        @csrf
+        <input type="hidden" name="id" id="edit_trip_id">
+        <div class="form-two">
+            <div class="form-field">
+                <label for="edit_trip_route">Route</label>
+                <input type="text" id="edit_trip_route" name="route" required>
+            </div>
+            <div class="form-field">
+                <label for="edit_trip_port">Port / pier</label>
+                <input type="text" id="edit_trip_port" name="port" required>
+            </div>
+        </div>
+        <div class="form-two">
+            <div class="form-field">
+                <label for="edit_trip_departure">Departure time</label>
+                <input type="text" id="edit_trip_departure" name="departure" required>
+            </div>
+            <div class="form-field">
+                <label for="edit_trip_capacity">Seat capacity</label>
+                <input type="number" id="edit_trip_capacity" name="capacity" min="1" max="200" required>
+            </div>
+        </div>
+        <div class="form-two">
+            <div class="form-field">
+                <label for="edit_trip_reserved">Reserved seats</label>
+                <input type="number" id="edit_trip_reserved" name="reserved" min="0" max="200" required>
+            </div>
+            <div class="form-field">
+                <label for="edit_trip_status">Trip status</label>
+                <select id="edit_trip_status" name="status" class="input-select" style="width: 100%;" required>
+                    @foreach(['Available', 'Almost Full', 'Boarding', 'On Going', 'Scheduled', 'Completed', 'Not Available'] as $st)
+                        <option value="{{ $st }}">{{ $st }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-blue">Update trip</button>
     </form>
 </section>
 
@@ -87,6 +157,7 @@
             <option value="On Going">On Going</option>
             <option value="Scheduled">Scheduled</option>
             <option value="Completed">Completed</option>
+            <option value="Not Available">Not Available</option>
         </select>
         <a href="{{ route('operator.module', 'manifest') }}" class="input-select export-link">View manifest</a>
     </div>
@@ -113,21 +184,43 @@
                             <small class="muted">{{ $trip['port'] }}</small>
                         </td>
                         <td>{{ $trip['reserved'] }} / {{ $trip['capacity'] }}</td>
-                        <td class="{{ $trip['seats_left'] === 'Full' || $trip['seats_left'] === '2 left' ? 'warn-text' : '' }}">
+                        <td class="{{ in_array($trip['seats_left'], ['Full', '2 left', 'Not Available']) ? 'warn-text' : '' }}">
                             <strong>{{ $trip['seats_left'] }}</strong>
                         </td>
                         <td>
                             <span class="badge {{ \App\Support\SampleData::badge($trip['op_status']) }}">{{ $trip['op_status'] }}</span>
                         </td>
                         <td>
-                            <form method="POST" action="{{ route('operator.trips.status', $trip['id']) }}" class="inline-action-form">
-                                @csrf
-                                <select name="status" class="input-select compact-select" aria-label="Change status" onchange="this.form.submit()">
-                                    @foreach(['Available', 'Almost Full', 'Boarding', 'On Going', 'Scheduled', 'Completed'] as $st)
-                                        <option value="{{ $st }}" @selected($trip['op_status'] === $st)>{{ $st }}</option>
-                                    @endforeach
-                                </select>
-                            </form>
+                            <div class="action-group">
+                                <form method="POST" action="{{ route('operator.trips.status', $trip['id']) }}" class="inline-action-form">
+                                    @csrf
+                                    <select name="status" class="input-select compact-select" aria-label="Change status" onchange="this.form.submit()">
+                                        @foreach(['Available', 'Almost Full', 'Boarding', 'On Going', 'Scheduled', 'Completed', 'Not Available'] as $st)
+                                            <option value="{{ $st }}" @selected($trip['op_status'] === $st)>{{ $st }}</option>
+                                        @endforeach
+                                    </select>
+                                </form>
+
+                                <button
+                                    type="button"
+                                    class="btn btn-outline btn-sm"
+                                    data-edit-op-trip
+                                    data-id="{{ $trip['id'] }}"
+                                    data-route="{{ $trip['route'] }}"
+                                    data-port="{{ $trip['port'] }}"
+                                    data-departure="{{ $trip['departure'] }}"
+                                    data-capacity="{{ $trip['capacity'] }}"
+                                    data-reserved="{{ $trip['reserved'] }}"
+                                    data-status="{{ $trip['op_status'] }}"
+                                >Edit</button>
+
+                                <form method="POST" action="{{ route('operator.trips.delete', $trip['id']) }}" onsubmit="return confirm('Delete this trip schedule?');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger-outline btn-sm" title="Delete trip">
+                                        @include('partials.icon', ['name' => 'trash']) Delete
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -138,4 +231,3 @@
     <p class="table-note">Showing {{ count($trips) }} trips · Example data</p>
 </section>
 @endsection
-

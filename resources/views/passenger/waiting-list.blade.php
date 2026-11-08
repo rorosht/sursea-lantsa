@@ -14,7 +14,16 @@
             <div class="wl-banner">
                 <div class="wl-banner-head">
                     <h2>{{ $waitlist['trip']['from'] }} → {{ $waitlist['trip']['to'] }}</h2>
-                    <span class="badge green-dark">On Going</span>
+                    <div class="wl-banner-badges">
+                        <span class="badge green-dark">On Going</span>
+                        <form method="POST" action="{{ route('passenger.reservation.delete') }}">
+                            @csrf
+                            <input type="hidden" name="target" value="waitlist">
+                            <button type="submit" class="banner-delete-btn" title="Remove from waiting list" aria-label="Remove from waiting list">
+                                @include('partials.icon', ['name' => 'trash'])
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 <div class="wl-banner-grid">
                     <div>
@@ -71,4 +80,3 @@
     @include('partials.ticket', ['ticket' => $waitlist, 'open' => false])
 @endif
 @endsection
-

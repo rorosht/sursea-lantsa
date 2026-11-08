@@ -14,7 +14,7 @@
     <div>
         <p class="eyebrow">ADMIN MANAGEMENT</p>
         <h1>Passenger manifest</h1>
-        <p class="subtitle">Check the passenger list, verify ticket reference codes, and manage waiting list promotions before each crossing departs.</p>
+        <p class="subtitle">Check the passenger list, scan QR tickets for Cargo, Passengers, and Waiting List Passengers, and manage boarding across all operators.</p>
     </div>
 
     <div class="head-filters">
@@ -62,22 +62,12 @@
     </div>
 </div>
 
-{{-- Quick reference verification bar --}}
-<section class="box">
-    <div class="box-head">
-        <div>
-            <h2>Verify ticket reference code</h2>
-            <p class="subtitle">Enter a passenger’s reservation reference code (e.g. 0000-00003) to verify and check in at the terminal.</p>
-        </div>
-    </div>
-    <form method="POST" action="{{ route('admin.manifest.verify') }}" class="verify-bar">
-        @csrf
-        <input type="text" name="ref" class="input-search" placeholder="Enter reservation reference code (e.g. 0000-00003)" required>
-        <button type="submit" class="btn btn-blue">
-            @include('partials.icon', ['name' => 'check']) Verify &amp; check in
-        </button>
-    </form>
-</section>
+{{-- QR Ticket Scanner for Passengers, Waiting List Passengers, and Cargo --}}
+@include('partials.qr-scanner-box', [
+    'verifyAction' => route('admin.manifest.verify'),
+    'scannerTitle' => 'QR Ticket Scanner (Passengers, Waiting List & Cargo)',
+    'scannerSubtitle' => 'Scan or upload a digital QR ticket for reserved passengers, waiting list passengers, or cargo shipments at Surigao Port.'
+])
 
 {{-- Add walk-in / manual passenger entry form box --}}
 <section class="box hidden" id="addManifestBox">
@@ -175,6 +165,7 @@
                     <th>Route</th>
                     <th>Lantsa</th>
                     <th>Passengers</th>
+                    <th>Cargo</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -196,10 +187,13 @@
                         <td>{{ $row['lantsa'] }}</td>
                         <td>
                             <strong>{{ $row['passengers'] }}</strong>
-                            @if(!empty($row['cargo_qty']))
-                                <br><small class="muted">{{ $row['cargo_qty'] }} cargo · ₱{{ $row['total'] }}</small>
+                            <br><small class="muted">₱{{ $row['total'] }}</small>
+                        </td>
+                        <td>
+                            @if(($row['cargo_qty'] ?? 0) > 0)
+                                <span class="badge blue">{{ $row['cargo_desc'] ?? ($row['cargo_qty'].' items') }}</span>
                             @else
-                                <br><small class="muted">₱{{ $row['total'] }}</small>
+                                <span class="muted">None</span>
                             @endif
                         </td>
                         <td>
@@ -234,6 +228,13 @@
                                     data-contact="{{ $row['contact'] }}"
                                     data-total="{{ $row['total'] }}"
                                 >Ticket</button>
+
+                                <form method="POST" action="{{ route('admin.manifest.delete', $row['ref']) }}" onsubmit="return confirm('Delete this manifest record?');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger-outline btn-sm" title="Delete manifest record">
+                                        @include('partials.icon', ['name' => 'trash']) Delete
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -252,4 +253,3 @@
 
 @include('partials.panel-ticket-modal')
 @endsection
-

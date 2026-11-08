@@ -174,3 +174,110 @@ if (cargoToggle && cargoNote) {
             : "− Hide Details";
     });
 }
+
+// ------------------------------------------------------------
+// 6. Passenger Notifications page: category / unread filter tabs
+// ------------------------------------------------------------
+var notifFilterBtns = document.querySelectorAll("[data-notif-filter]");
+var notifCards = document.querySelectorAll("#passengerNotifList .notif-card");
+
+notifFilterBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+        var filter = btn.dataset.notifFilter;
+        notifFilterBtns.forEach(function (other) {
+            other.classList.toggle("active", other === btn);
+        });
+        notifCards.forEach(function (card) {
+            var status = card.dataset.notifStatus;
+            var type = card.dataset.notifType;
+            var show =
+                filter === "all" ||
+                (filter === "Unread" && status === "Unread") ||
+                type === filter;
+            card.classList.toggle("hidden", !show);
+        });
+    });
+});
+
+// ------------------------------------------------------------
+// 7. Passenger Profile page: module switcher tabs
+// ------------------------------------------------------------
+var profileTabBtns = document.querySelectorAll("[data-profile-tab]");
+
+profileTabBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+        var tabName = btn.dataset.profileTab;
+        profileTabBtns.forEach(function (other) {
+            other.classList.toggle("active", other === btn);
+        });
+        document
+            .querySelectorAll(".profile-module-panel")
+            .forEach(function (panel) {
+                panel.classList.toggle(
+                    "hidden",
+                    panel.id !== "profileTab-" + tabName
+                );
+            });
+    });
+});
+
+// ------------------------------------------------------------
+// 8. Passenger Profile Transactions: View Ticket modal
+// ------------------------------------------------------------
+function escapeHtmlText(text) {
+    var div = document.createElement("div");
+    div.textContent = text || "";
+    return div.innerHTML;
+}
+
+var txTicketModal = document.getElementById("txTicketModal");
+
+document.querySelectorAll("[data-open-tx-ticket]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+        if (!txTicketModal) return;
+
+        var type = btn.dataset.openTxTicket;
+        var ref = btn.dataset.ref || "0000-00001";
+        var titleEl = document.getElementById("txModalTitle");
+        var bodyEl = document.getElementById("txModalBody");
+        var totalWrap = document.getElementById("txModalTotalWrap");
+        var totalEl = document.getElementById("txModalTotal");
+        var noteEl = document.getElementById("txModalNote");
+        var qrEl = document.getElementById("txModalQr");
+
+        if (type === "cargo") {
+            titleEl.textContent = "Cargo Delivery Ticket";
+            bodyEl.innerHTML =
+                "<dt>Cargo Tracking ID:</dt><dd>" + escapeHtmlText(ref) + "</dd>" +
+                "<dt>Sender name:</dt><dd>" + escapeHtmlText(btn.dataset.sender) + "</dd>" +
+                "<dt>Sender contact number:</dt><dd>" + escapeHtmlText(btn.dataset.senderContact) + "</dd>" +
+                "<dt>Receiver name:</dt><dd>" + escapeHtmlText(btn.dataset.receiver) + "</dd>" +
+                "<dt>Receiver contact number:</dt><dd>" + escapeHtmlText(btn.dataset.receiverContact) + "</dd>" +
+                "<dt>Cargo name:</dt><dd>" + escapeHtmlText(btn.dataset.items) + "</dd>" +
+                "<dt>Cargo quantity:</dt><dd>" + escapeHtmlText(btn.dataset.qty) + "</dd>" +
+                "<dt>Lantsa name:</dt><dd>" + escapeHtmlText(btn.dataset.lantsa) + "</dd>";
+            totalWrap.classList.add("hidden");
+            noteEl.textContent = "Please take a screenshot on this ticket for verification before delivery.";
+        } else {
+            titleEl.textContent = "Passenger Reservation Ticket";
+            bodyEl.innerHTML =
+                "<dt>Reservation reference code:</dt><dd>" + escapeHtmlText(ref) + "</dd>" +
+                "<dt>Passenger full name:</dt><dd>" + escapeHtmlText(btn.dataset.name) + "</dd>" +
+                "<dt>Number of passengers:</dt><dd>" + escapeHtmlText(btn.dataset.passengers) + "</dd>" +
+                "<dt>Cargo quantity:</dt><dd>" + escapeHtmlText(btn.dataset.cargo || "0") + "</dd>" +
+                "<dt>Route and departure date/time:</dt><dd>" + escapeHtmlText(btn.dataset.route) + "</dd>" +
+                "<dt>Lantsa name:</dt><dd>" + escapeHtmlText(btn.dataset.lantsa) + "</dd>" +
+                "<dt>Contact Number:</dt><dd>" + escapeHtmlText(btn.dataset.contact) + "</dd>";
+            totalWrap.classList.remove("hidden");
+            totalEl.textContent = btn.dataset.total || "150";
+            noteEl.textContent = "Please take a screenshot on this ticket for verification before boarding";
+        }
+
+        if (qrEl) {
+            qrEl.dataset.code = ref;
+            drawQr(qrEl);
+        }
+
+        txTicketModal.classList.add("open");
+    });
+});

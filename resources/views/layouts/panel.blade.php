@@ -17,6 +17,8 @@
     $isAdmin = $user['role'] === 'admin';
     $menu = \App\Support\SampleData::menu($user['role']);
     $homeUrl = url($isAdmin ? 'admin/dashboard' : 'operator/dashboard');
+    $notifs = $isAdmin ? \App\Support\SampleData::adminNotifications() : \App\Support\SampleData::operatorNotifications();
+    $unreadCount = count(array_filter($notifs, fn ($n) => $n['status'] === 'Unread'));
 @endphp
 
 <div class="panel">
@@ -70,23 +72,77 @@
             <div class="topbar-right">
                 <span class="top-text">{{ $isAdmin ? 'Surigao City' : $user['lantsa'] }}</span>
 
-                <a href="{{ url($isAdmin ? 'admin/notifications' : 'operator/notifications') }}" class="bell-btn" aria-label="Notifications">
-                    @include('partials.icon', ['name' => 'bell'])
-                </a>
+                {{-- Clickable Notifications Dropdown --}}
+                <div class="dropdown">
+                    <button type="button" class="bell-btn" data-dropdown-btn="panelNotifMenu" aria-label="Notifications">
+                        @include('partials.icon', ['name' => 'bell'])
+                        @if($unreadCount > 0)
+                            <span class="bell-badge">{{ $unreadCount }}</span>
+                        @endif
+                    </button>
+                    <div class="dropdown-menu notif-dropdown-menu" id="panelNotifMenu">
+                        <div class="notif-dropdown-head">
+                            <strong>Notifications</strong>
+                            <span class="badge {{ $unreadCount > 0 ? 'amber' : 'grey' }}">{{ $unreadCount }} unread</span>
+                        </div>
+                        <div class="notif-dropdown-list">
+                            @foreach(array_slice($notifs, 0, 4) as $nf)
+                                <a href="{{ $nf['url'] }}" class="notif-dropdown-item {{ $nf['status'] === 'Unread' ? 'unread' : '' }}">
+                                    <div class="notif-dropdown-top">
+                                        <span class="badge {{ \App\Support\SampleData::badge($nf['status']) }}">{{ $nf['type'] }}</span>
+                                        <small>{{ $nf['received'] }}</small>
+                                    </div>
+                                    <p>{{ $nf['notification'] }}</p>
+                                    <span class="notif-dropdown-cta">{{ $nf['action_label'] }} →</span>
+                                </a>
+                            @endforeach
+                        </div>
+                        <a href="{{ url($isAdmin ? 'admin/notifications' : 'operator/notifications') }}" class="btn btn-blue btn-sm btn-block" style="margin-top: 8px; text-align: center;">
+                            Open all notifications
+                        </a>
+                    </div>
+                </div>
 
+                {{-- User Profile Dropdown --}}
                 <div class="dropdown">
                     <button type="button" class="user-btn" data-dropdown-btn="panelUserMenu">
                         @include('partials.icon', ['name' => 'user'])
                         <span>{{ $isAdmin ? 'Administrator' : 'Operator' }}</span>
                         @include('partials.icon', ['name' => 'chevron-down'])
                     </button>
-                    <div class="dropdown-menu" id="panelUserMenu">
-                        <p class="menu-title">{{ $user['name'] }}</p>
-                        <p class="menu-text">{{ $user['email'] }}</p>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="menu-item">Log out</button>
-                        </form>
+                    <div class="dropdown-menu user-dropdown-menu" id="panelUserMenu">
+                        <div class="user-dropdown-header">
+                            <p class="menu-title">{{ $user['name'] }}</p>
+                            <p class="menu-text">{{ $user['email'] }} · {{ $isAdmin ? 'Administrator' : 'Operator' }}</p>
+                        </div>
+                        <div class="user-dropdown-nav">
+                            <a href="{{ url($isAdmin ? 'admin/profile' : 'operator/profile') }}" class="menu-item">
+                                @include('partials.icon', ['name' => 'user'])
+                                <span>Profile &amp; Modules</span>
+                            </a>
+                            @if($isAdmin)
+                                <a href="{{ route('admin.settings') }}" class="menu-item">
+                                    @include('partials.icon', ['name' => 'gear'])
+                                    <span>Settings &amp; Accounts</span>
+                                </a>
+                            @endif
+                            <a href="{{ url($isAdmin ? 'admin/notifications' : 'operator/notifications') }}" class="menu-item">
+                                @include('partials.icon', ['name' => 'bell'])
+                                <span>Notifications</span>
+                                @if($unreadCount > 0)
+                                    <span class="menu-badge">{{ $unreadCount }}</span>
+                                @endif
+                            </a>
+                        </div>
+                        <div class="user-dropdown-footer">
+                            <form method="POST" action="{{ route('logout') }}" class="logout-form">
+                                @csrf
+                                <button type="submit" class="menu-item logout-item">
+                                    @include('partials.icon', ['name' => 'logout'])
+                                    <span>Log out</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
