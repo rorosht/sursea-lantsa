@@ -1,8 +1,5 @@
-// passenger.js - passenger pages, login and register (plain JavaScript)
 
-// ------------------------------------------------------------
 // 1. Ticket pop-up: open / close
-// ------------------------------------------------------------
 document.querySelectorAll("[data-open-modal]").forEach(function (button) {
     button.addEventListener("click", function () {
         document.getElementById(button.dataset.openModal).classList.add("open");
@@ -35,10 +32,7 @@ document.addEventListener("keydown", function (event) {
     }
 });
 
-// ------------------------------------------------------------
 // 2. Decorative QR picture (drawn from the reference code)
-//    NOTE: this is only a picture. A real QR code can be added later.
-// ------------------------------------------------------------
 function drawQr(box) {
     var size = 25;
     var code = box.dataset.code || "0";
@@ -100,9 +94,7 @@ function drawQr(box) {
 
 document.querySelectorAll(".qr").forEach(drawQr);
 
-// ------------------------------------------------------------
 // 3. Cargo lines: add / remove
-// ------------------------------------------------------------
 var cargoRows = document.getElementById("cargoRows");
 var cargoTemplate = document.getElementById("cargoTemplate");
 var addCargoButton = document.getElementById("addCargo");
@@ -129,9 +121,7 @@ if (cargoRows && cargoTemplate && addCargoButton) {
     updateTrashButtons();
 }
 
-// ------------------------------------------------------------
 // 4. Login / Register: Passenger and Operator tabs
-// ------------------------------------------------------------
 var roleTabs = document.querySelectorAll("[data-role-tab]");
 
 roleTabs.forEach(function (tab) {
@@ -160,9 +150,7 @@ roleTabs.forEach(function (tab) {
     });
 });
 
-// ------------------------------------------------------------
 // 5. Home page: "+ Add Details" for cargo
-// ------------------------------------------------------------
 var cargoToggle = document.getElementById("cargoToggle");
 var cargoNote = document.getElementById("cargoNote");
 
@@ -175,9 +163,7 @@ if (cargoToggle && cargoNote) {
     });
 }
 
-// ------------------------------------------------------------
 // 6. Passenger Notifications page: category / unread filter tabs
-// ------------------------------------------------------------
 var notifFilterBtns = document.querySelectorAll("[data-notif-filter]");
 var notifCards = document.querySelectorAll("#passengerNotifList .notif-card");
 
@@ -199,9 +185,7 @@ notifFilterBtns.forEach(function (btn) {
     });
 });
 
-// ------------------------------------------------------------
 // 7. Passenger Profile page: module switcher tabs
-// ------------------------------------------------------------
 var profileTabBtns = document.querySelectorAll("[data-profile-tab]");
 
 profileTabBtns.forEach(function (btn) {
@@ -221,9 +205,7 @@ profileTabBtns.forEach(function (btn) {
     });
 });
 
-// ------------------------------------------------------------
 // 8. Passenger Profile Transactions: View Ticket modal
-// ------------------------------------------------------------
 function escapeHtmlText(text) {
     var div = document.createElement("div");
     div.textContent = text || "";

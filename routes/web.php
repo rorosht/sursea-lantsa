@@ -6,16 +6,6 @@ use App\Http\Controllers\OperatorController;
 use App\Http\Controllers\PassengerController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| SURSEA - Lantsa Hub routes
-|--------------------------------------------------------------------------
-| 1. Public pages (anyone can open)
-| 2. Login / Register / Logout
-| 3. Passenger pages (must be logged in as passenger)
-| 4. Operator portal (must be logged in as operator)
-| 5. Admin portal (must be logged in as admin)
-*/
 
 // 1. PUBLIC PAGES
 Route::get('/', [PassengerController::class, 'home'])->name('home');

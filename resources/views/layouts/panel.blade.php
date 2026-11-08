@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/base.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/panel.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/base.css') }}?v={{ filemtime(public_path('css/base.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/panel.css') }}?v={{ filemtime(public_path('css/panel.css')) }}">
 </head>
 <body class="panel-body">
 @php
@@ -21,11 +21,18 @@
     $unreadCount = count(array_filter($notifs, fn ($n) => $n['status'] === 'Unread'));
 @endphp
 
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
 <div class="panel">
 
     {{-- ============ SIDEBAR ============ --}}
-    <aside class="sidebar">
-        <a href="{{ $homeUrl }}" class="brand">@include('partials.logo')</a>
+    <aside class="sidebar" id="panelSidebar">
+        <div class="sidebar-top">
+            <a href="{{ $homeUrl }}" class="brand">@include('partials.logo')</a>
+            <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close navigation">
+                @include('partials.icon', ['name' => 'x'])
+            </button>
+        </div>
 
         <div class="workspace-card">
             @if($isAdmin)
@@ -63,10 +70,15 @@
     {{-- ============ MAIN AREA ============ --}}
     <div class="panel-main">
         <header class="topbar">
-            <div class="crumbs">
-                <strong>{{ $isAdmin ? 'Admin Portal' : 'Operator Portal' }}</strong>
-                <span>/</span>
-                <span>@yield('crumb')</span>
+            <div class="topbar-left">
+                <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Open navigation" aria-expanded="false">
+                    @include('partials.icon', ['name' => 'menu'])
+                </button>
+                <div class="crumbs">
+                    <strong>{{ $isAdmin ? 'Admin Portal' : 'Operator Portal' }}</strong>
+                    <span>/</span>
+                    <span>@yield('crumb')</span>
+                </div>
             </div>
 
             <div class="topbar-right">
@@ -167,7 +179,7 @@
     </div>
 </div>
 
-<script src="{{ asset('js/common.js') }}"></script>
-<script src="{{ asset('js/panel.js') }}"></script>
+<script src="{{ asset('js/common.js') }}?v={{ filemtime(public_path('js/common.js')) }}"></script>
+<script src="{{ asset('js/panel.js') }}?v={{ filemtime(public_path('js/panel.js')) }}"></script>
 </body>
 </html>

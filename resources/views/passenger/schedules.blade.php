@@ -17,7 +17,7 @@
             <div class="reserve-banner">
                 <div class="banner-head-row">
                     <p>Reservation Schedule</p>
-                    <form method="POST" action="{{ route('passenger.reservation.delete') }}">
+                    <form method="POST" action="{{ route('passenger.reservation.delete') }}" class="banner-delete-form">
                         @csrf
                         <input type="hidden" name="target" value="reservation">
                         <button type="submit" class="banner-delete-btn" title="Delete reservation" aria-label="Delete reservation">

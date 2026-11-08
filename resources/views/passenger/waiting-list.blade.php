@@ -16,7 +16,7 @@
                     <h2>{{ $waitlist['trip']['from'] }} → {{ $waitlist['trip']['to'] }}</h2>
                     <div class="wl-banner-badges">
                         <span class="badge green-dark">On Going</span>
-                        <form method="POST" action="{{ route('passenger.reservation.delete') }}">
+                        <form method="POST" action="{{ route('passenger.reservation.delete') }}" class="banner-delete-form">
                             @csrf
                             <input type="hidden" name="target" value="waitlist">
                             <button type="submit" class="banner-delete-btn" title="Remove from waiting list" aria-label="Remove from waiting list">

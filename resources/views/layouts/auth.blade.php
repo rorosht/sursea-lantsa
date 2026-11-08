@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/base.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/passenger.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/base.css') }}?v={{ filemtime(public_path('css/base.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/passenger.css') }}?v={{ filemtime(public_path('css/passenger.css')) }}">
 </head>
 <body class="auth-body">
 
@@ -27,7 +27,7 @@
     @yield('content')
 </main>
 
-<script src="{{ asset('js/common.js') }}"></script>
-<script src="{{ asset('js/passenger.js') }}"></script>
+<script src="{{ asset('js/common.js') }}?v={{ filemtime(public_path('js/common.js')) }}"></script>
+<script src="{{ asset('js/passenger.js') }}?v={{ filemtime(public_path('js/passenger.js')) }}"></script>
 </body>
 </html>

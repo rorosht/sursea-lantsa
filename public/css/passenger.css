@@ -1,6 +1,3 @@
-/* =========================================================
-   passenger.css - passenger website + login/register pages
-   ========================================================= */
 
 /* ---------- header ---------- */
 .site-header {
@@ -21,6 +18,7 @@
 }
 .main-nav {
     display: flex;
+    align-items: center;
     gap: 32px;
     font-weight: 600;
     font-size: 0.95rem;
@@ -28,15 +26,17 @@
 .main-nav a {
     padding: 4px 0;
     border-bottom: 2px solid transparent;
+    white-space: nowrap;
 }
 .main-nav a.active {
     border-bottom-color: var(--navy);
 }
 .header-actions {
     justify-self: end;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
 }
 .icon-btn {
     position: relative;
@@ -152,6 +152,8 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 18px;
 }
 .booking-head h2 {
@@ -205,6 +207,7 @@ main {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
     border: 1px solid #d9e3ea;
     border-radius: 10px;
     padding: 9px 12px;
@@ -224,6 +227,7 @@ main {
     color: var(--teal);
     font-weight: 700;
     font-size: 0.8rem;
+    white-space: nowrap;
 }
 .cargo-note {
     width: 100%;
@@ -315,6 +319,7 @@ main {
     justify-content: space-between;
     align-items: flex-end;
     gap: 20px;
+    flex-wrap: wrap;
     margin-bottom: 24px;
 }
 .board-head h2 {
@@ -334,6 +339,7 @@ main {
     border-radius: 18px;
     overflow: hidden;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     margin-top: 20px;
 }
 .board-head + .board {
@@ -352,13 +358,16 @@ main {
     font-size: 0.7rem;
     letter-spacing: 0.04em;
     color: var(--muted);
+    vertical-align: middle;
 }
 .board td {
     padding: 18px 24px;
     border-top: 1px solid #f0ece4;
+    vertical-align: middle;
 }
 .board .right {
     text-align: right;
+    white-space: nowrap;
 }
 .board .arrow {
     margin: 0 4px;
@@ -385,7 +394,15 @@ main {
     justify-content: space-between;
     gap: 30px;
     align-items: flex-start;
+    flex-wrap: wrap;
     margin-bottom: 20px;
+}
+.passenger-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
 }
 .reserve-banner,
 .wl-banner {
@@ -394,6 +411,7 @@ main {
     border-radius: 24px;
     padding: 22px 26px;
     width: 400px;
+    max-width: 100%;
     flex-shrink: 0;
 }
 .reserve-banner > p:first-child {
@@ -411,6 +429,8 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
     margin-top: 6px;
 }
 .banner-bottom strong,
@@ -446,13 +466,15 @@ main {
 .filter-field select,
 .filter-field input {
     width: 100%;
-    padding: 13px 14px;
+    height: 46px;
+    padding: 11px 14px;
     border: 1px solid var(--navy);
     border-radius: 10px;
     background: #fff;
 }
 .search-trips {
-    padding: 14px 22px;
+    height: 46px;
+    padding: 0 22px;
     box-shadow: 0 8px 18px rgba(11, 45, 73, 0.3);
 }
 
@@ -468,6 +490,8 @@ main {
     border-radius: 22px;
     padding: 20px 24px;
     box-shadow: 0 10px 24px rgba(11, 45, 73, 0.13);
+    display: flex;
+    flex-direction: column;
 }
 .wl-card {
     border: 1px solid #000;
@@ -485,8 +509,10 @@ main {
     font-size: 1.25rem;
 }
 .badges {
-    display: flex;
+    display: inline-flex;
+    align-items: center;
     gap: 4px;
+    flex-shrink: 0;
 }
 .trip-sub {
     color: var(--muted);
@@ -497,7 +523,8 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 10px;
+    gap: 10px;
+    margin-bottom: 12px;
 }
 .small-label {
     display: block;
@@ -527,7 +554,12 @@ main {
 }
 .trip-actions {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 4px;
 }
 .cap {
     text-align: left;
@@ -572,7 +604,9 @@ main {
 .wl-banner-bottom {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
     margin-top: 14px;
 }
 .capacity strong {
@@ -675,7 +709,8 @@ main {
     font-size: 0.9rem;
 }
 .reserve-col .btn-lg {
-    display: block;
+    display: flex;
+    width: fit-content;
     margin: 30px auto 0;
 }
 
@@ -1138,6 +1173,7 @@ main {
 .notif-filter-tabs,
 .profile-module-tabs {
     display: flex;
+    align-items: center;
     gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 22px;
@@ -1151,9 +1187,12 @@ main {
     font-family: "Poppins", sans-serif;
     font-size: 0.86rem;
     font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
     color: #425268;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     cursor: pointer;
 }
@@ -1208,9 +1247,10 @@ main {
     margin-bottom: 4px;
 }
 .notif-card-actions {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0;
 }
 .passenger-profile-badge {
     display: flex;
@@ -1246,6 +1286,8 @@ main {
     align-items: center;
     justify-content: flex-end;
     gap: 8px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 .btn-outline-red {
     background: #fff5f5;
@@ -1256,57 +1298,142 @@ main {
     background: #ffe0e0;
 }
 
-/* ---------- small screens ---------- */
+/* ---------- responsive screens ---------- */
+@media (max-width: 1080px) {
+    .hero {
+        gap: 32px;
+    }
+    .hero h1 {
+        font-size: 2.85rem;
+    }
+    .passenger-stat-row.cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 900px) {
     .header-inner {
         grid-template-columns: 1fr auto;
+        padding: 12px 20px;
+        gap: 10px 14px;
     }
     .main-nav {
         grid-column: 1 / -1;
         order: 3;
-        gap: 18px;
+        gap: 20px;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .main-nav::-webkit-scrollbar {
+        display: none;
     }
     .hero,
-    .step-grid,
     .trip-grid,
     .wl-grid,
     .auth-wrap,
     .reserve-card,
-    .filter-bar {
+    .profile-form-grid {
         grid-template-columns: 1fr;
     }
+    .step-grid,
+    .passenger-stat-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+    }
+    .filter-bar {
+        grid-template-columns: 1fr 1fr;
+    }
+    .filter-bar .search-trips {
+        width: 100%;
+    }
+    .hero {
+        padding-top: 32px;
+        gap: 28px;
+    }
     .hero h1 {
-        font-size: 2.4rem;
+        font-size: 2.35rem;
+    }
+    .page-title {
+        font-size: 2.15rem;
+    }
+    .page-title.big,
+    .form-page .page-title {
+        font-size: 2.35rem;
+    }
+    .lead {
+        font-size: 1.15rem;
+    }
+    .wl-lead {
+        font-size: 1rem;
+        text-align: left;
+    }
+    .steps h2,
+    .board-head h2 {
+        font-size: 1.85rem;
     }
     .schedule-top,
     .wl-top,
     .board-head {
         flex-direction: column;
-        align-items: stretch;
+        align-items: flex-start;
+        gap: 16px;
     }
     .reserve-banner,
     .wl-banner {
         width: 100%;
     }
+    .trip-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 20px;
+        justify-content: stretch;
+    }
+    .trip-bar-item + .trip-bar-item {
+        border-left: none;
+        padding-left: 0;
+    }
+    .reserve-card {
+        padding: 22px 18px;
+    }
     .reserve-col {
-        padding: 10px 6px;
+        padding: 8px 4px;
     }
     .reserve-col.divider {
         border-left: none;
-        border-top: 3px solid #000;
-        margin-top: 20px;
+        border-top: 2px solid var(--line);
+        margin-top: 18px;
+        padding-top: 20px;
     }
     .add-cargo {
         width: 100%;
     }
-    .auth-wrap,
     .auth-header-inner {
-        padding-left: 20px;
-        padding-right: 20px;
+        padding: 16px 20px;
+    }
+    .auth-wrap {
+        padding: 24px 20px 44px;
+        gap: 24px;
     }
     .auth-side {
         min-height: 0;
+        padding: 28px 24px;
+    }
+    .auth-side h1 {
+        font-size: 1.85rem;
+        margin: 22px 0 14px;
+    }
+    .auth-steps {
+        margin-top: 22px;
+        gap: 14px;
+    }
+    .auth-foot {
+        margin-top: 22px;
+    }
+    .auth-card {
+        padding: 30px 24px;
     }
     .auth-grid {
         grid-template-columns: 1fr;
@@ -1318,7 +1445,187 @@ main {
     .ticket-body dd {
         margin-bottom: 10px;
     }
-    .page-title.big {
-        font-size: 2.4rem;
+}
+
+@media (max-width: 640px) {
+    .header-inner {
+        padding: 10px 16px;
+    }
+    .main-nav {
+        justify-content: space-between;
+        gap: 14px;
+        font-size: 0.88rem;
+    }
+    .icon-btn {
+        width: 38px;
+        height: 38px;
+    }
+    .icon-btn .icon {
+        width: 25px;
+        height: 25px;
+    }
+    .login-btn {
+        padding: 9px 18px;
+        font-size: 0.86rem;
+    }
+    .step-grid,
+    .filter-bar,
+    .passenger-stat-row,
+    .passenger-stat-row.cols-4,
+    .booking-grid,
+    .trip-bar {
+        grid-template-columns: 1fr;
+    }
+    .trip-bar-item + .trip-bar-item {
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        padding-top: 12px;
+    }
+    .hero {
+        padding-top: 22px;
+        padding-bottom: 28px;
+        gap: 22px;
+    }
+    .hero h1 {
+        font-size: 1.95rem;
+    }
+    .steps {
+        padding-top: 36px;
+        padding-bottom: 36px;
+    }
+    .board-section {
+        padding-bottom: 44px;
+    }
+    .page {
+        padding-top: 18px;
+        padding-bottom: 40px;
+    }
+    .page-title,
+    .page-title.big,
+    .form-page .page-title {
+        font-size: 1.85rem;
+    }
+    .lead {
+        font-size: 1rem;
+    }
+    .reserve-banner,
+    .wl-banner {
+        padding: 18px;
+        border-radius: 18px;
+    }
+    .reserve-banner h2,
+    .wl-banner-head h2 {
+        font-size: 1.35rem;
+    }
+    .trip-card,
+    .wl-card {
+        padding: 16px 18px;
+        border-radius: 18px;
+    }
+    .trip-top {
+        flex-wrap: wrap;
+    }
+    .board th,
+    .board td {
+        padding: 13px 16px;
+    }
+    .cargo-row {
+        grid-template-columns: 1fr 80px 42px;
+        gap: 8px;
+    }
+    .trash {
+        width: 42px;
+        height: 46px;
+    }
+    .notif-card {
+        grid-template-columns: 40px 1fr;
+        padding: 16px;
+        gap: 12px;
+        align-items: start;
+    }
+    .notif-card-icon {
+        width: 40px;
+        height: 40px;
+    }
+    .notif-card-top {
+        flex-wrap: wrap;
+    }
+    .notif-card-actions {
+        grid-column: 2 / -1;
+    }
+    .passenger-profile-badge {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    .profile-card-box {
+        padding: 20px 16px;
+        border-radius: 18px;
+    }
+    .notif-tab,
+    .profile-tab-btn {
+        padding: 8px 14px;
+        font-size: 0.82rem;
+    }
+    .ticket {
+        border-radius: 20px;
+    }
+    .ticket-head {
+        padding: 16px 46px 14px;
+    }
+    .ticket-head h2 {
+        font-size: 1.15rem;
+    }
+    .modal-close {
+        right: 12px;
+        top: 14px;
+    }
+    .modal-close .icon {
+        width: 26px;
+        height: 26px;
+    }
+    .ticket-body {
+        padding: 16px 18px;
+    }
+    .ticket-foot {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px 18px 20px;
+    }
+    .ticket-foot .total {
+        justify-content: center;
+        gap: 16px;
+    }
+    .qr {
+        width: 126px;
+        height: 126px;
+    }
+    .auth-header-inner {
+        padding: 14px 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .auth-wrap {
+        padding: 18px 16px 36px;
+    }
+    .auth-card {
+        padding: 24px 18px;
+        border-radius: 20px;
+    }
+    .auth-card h2 {
+        font-size: 1.6rem;
+    }
+    .forgot {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .wl-banner-grid {
+        grid-template-columns: 1fr;
+    }
+    .brand-text strong {
+        font-size: 1.1rem;
+    }
+    .brand-text small {
+        font-size: 0.62rem;
     }
 }

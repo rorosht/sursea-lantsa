@@ -1,8 +1,6 @@
-// panel.js - admin and operator portals (plain JavaScript)
 
-// ------------------------------------------------------------
+
 // 1. Search box + status filter for tables
-// ------------------------------------------------------------
 var searchInput = document.getElementById("tableSearch");
 var statusSelect = document.getElementById("tableStatus");
 var tableRows = document.querySelectorAll("#filterTable tbody tr");
@@ -36,9 +34,7 @@ if (statusSelect) {
     statusSelect.addEventListener("change", filterTable);
 }
 
-// ------------------------------------------------------------
-// 2. Notifications: "Mark all as read"
-// ------------------------------------------------------------
+// 2. Notifications: "Mark all as read"--
 var markReadButton = document.getElementById("markAllRead");
 
 if (markReadButton) {
@@ -58,9 +54,8 @@ if (markReadButton) {
     });
 }
 
-// ------------------------------------------------------------
+
 // 3. Review operator: "Approve" works only when all 3 checks are ticked
-// ------------------------------------------------------------
 var checkBoxes = document.querySelectorAll('input[name="checks[]"]');
 var approveButton = document.getElementById("approveBtn");
 
@@ -81,9 +76,7 @@ if (approveButton && checkBoxes.length > 0) {
     updateApproveButton();
 }
 
-// ------------------------------------------------------------
 // 4. Toggle collapsible form boxes (Schedule crossing, Add passenger, Log cargo)
-// ------------------------------------------------------------
 document.querySelectorAll("[data-toggle-box]").forEach(function (btn) {
     btn.addEventListener("click", function () {
         var box = document.getElementById(btn.dataset.toggleBox);
@@ -99,9 +92,7 @@ document.querySelectorAll("[data-toggle-box]").forEach(function (btn) {
     });
 });
 
-// ------------------------------------------------------------
 // 5. QR Ticket preview modal for Manifest, Check-in, and Cargo
-// ------------------------------------------------------------
 function drawPanelQr(box, codeText) {
     var size = 25;
     var code = codeText || "0000-00001";
@@ -233,9 +224,7 @@ document.addEventListener("keydown", function (event) {
     }
 });
 
-// ------------------------------------------------------------
 // 6. Document preview in Operator Approval Review
-// ------------------------------------------------------------
 document.querySelectorAll("[data-doc-preview]").forEach(function (link) {
     link.addEventListener("click", function (event) {
         event.preventDefault();
@@ -243,9 +232,7 @@ document.querySelectorAll("[data-doc-preview]").forEach(function (link) {
     });
 });
 
-// ------------------------------------------------------------
-// 7. Dynamic Cargo Rows (Operator Cargo & Admin Cargo)
-// ------------------------------------------------------------
+// 7. Dynamic Cargo Rows (Operator Cargo & Admin Cargo)-
 var panelCargoRows = document.getElementById("cargoRows");
 var panelCargoTemplate = document.getElementById("cargoTemplate");
 var panelAddCargoBtn = document.getElementById("addCargo");
@@ -272,9 +259,7 @@ if (panelCargoRows && panelCargoTemplate && panelAddCargoBtn) {
     updatePanelTrashButtons();
 }
 
-// ------------------------------------------------------------
 // 8. QR Ticket Scanner (Operator Check-in & Admin Manifest)
-// ------------------------------------------------------------
 var qrStream = null;
 var startQrCamBtn = document.getElementById("startQrCamBtn");
 var stopQrCamBtn = document.getElementById("stopQrCamBtn");
@@ -409,9 +394,7 @@ if (qrImageInput) {
     });
 }
 
-// ------------------------------------------------------------
 // 9. Operator Edit Route / Edit Trip / Set Cargo Amount / Edit Cargo
-// ------------------------------------------------------------
 document.querySelectorAll("[data-edit-op-route]").forEach(function (btn) {
     btn.addEventListener("click", function () {
         var box = document.getElementById("editOperatorRouteBox");
@@ -475,9 +458,7 @@ document.querySelectorAll("[data-edit-op-cargo]").forEach(function (btn) {
     });
 });
 
-// ------------------------------------------------------------
 // 10. Clickable Notification Rows (Admin & Operator)
-// ------------------------------------------------------------
 document.querySelectorAll(".clickable-notif-row[data-href]").forEach(function (row) {
     row.addEventListener("click", function (event) {
         if (event.target.closest("button, a, form")) {
@@ -487,9 +468,7 @@ document.querySelectorAll(".clickable-notif-row[data-href]").forEach(function (r
     });
 });
 
-// ------------------------------------------------------------
 // 11. Module Switcher Tabs (Operator Profile, Admin Profile, Settings)
-// ------------------------------------------------------------
 var panelTabs = document.querySelectorAll("[data-panel-tab]");
 
 panelTabs.forEach(function (tab) {
@@ -502,4 +481,52 @@ panelTabs.forEach(function (tab) {
             pane.classList.toggle("active", pane.id === targetId);
         });
     });
+});
+
+// 12. Responsive Mobile Sidebar Drawer (Admin & Operator)
+var sidebarToggleBtn = document.getElementById("sidebarToggle");
+var sidebarCloseBtn = document.getElementById("sidebarClose");
+var sidebarBackdropEl = document.getElementById("sidebarBackdrop");
+var panelSidebarEl = document.getElementById("panelSidebar");
+
+function setSidebarOpen(isOpen) {
+    document.body.classList.toggle("sidebar-open", isOpen);
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+}
+
+if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener("click", function () {
+        setSidebarOpen(!document.body.classList.contains("sidebar-open"));
+    });
+}
+if (sidebarCloseBtn) {
+    sidebarCloseBtn.addEventListener("click", function () {
+        setSidebarOpen(false);
+    });
+}
+if (sidebarBackdropEl) {
+    sidebarBackdropEl.addEventListener("click", function () {
+        setSidebarOpen(false);
+    });
+}
+if (panelSidebarEl) {
+    panelSidebarEl.querySelectorAll("a.side-link").forEach(function (link) {
+        link.addEventListener("click", function () {
+            if (window.innerWidth <= 1000) {
+                setSidebarOpen(false);
+            }
+        });
+    });
+}
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && document.body.classList.contains("sidebar-open")) {
+        setSidebarOpen(false);
+    }
+});
+window.addEventListener("resize", function () {
+    if (window.innerWidth > 1000 && document.body.classList.contains("sidebar-open")) {
+        setSidebarOpen(false);
+    }
 });

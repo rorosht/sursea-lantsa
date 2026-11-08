@@ -1,5 +1,3 @@
-// common.js - used by every page (plain JavaScript)
-// Opens and closes the small drop-down menus (bell, profile).
 
 function closeDropdowns(exceptMenu) {
     document.querySelectorAll(".dropdown-menu.open").forEach(function (menu) {
@@ -30,7 +28,13 @@ document.querySelectorAll(".dropdown-menu").forEach(function (menu) {
     });
 });
 
-// Clicking anywhere else closes the menus
+// Clicking anywhere else or pressing Escape closes the menus
 document.addEventListener("click", function () {
     closeDropdowns(null);
+});
+
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+        closeDropdowns(null);
+    }
 });

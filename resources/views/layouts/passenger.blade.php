@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/base.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/passenger.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/base.css') }}?v={{ filemtime(public_path('css/base.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/passenger.css') }}?v={{ filemtime(public_path('css/passenger.css')) }}">
 </head>
 <body>
 @php
@@ -27,10 +27,6 @@
             <a href="{{ route('schedules') }}" class="{{ request()->routeIs('schedules', 'seat.*', 'cargo.*') ? 'active' : '' }}">Schedules</a>
             <a href="{{ route('waiting-list') }}" class="{{ request()->routeIs('waiting-list', 'waitlist.*') ? 'active' : '' }}">Waiting List</a>
             <a href="{{ route('routes') }}" class="{{ request()->routeIs('routes') ? 'active' : '' }}">Routes</a>
-            @if($isPassenger)
-                <a href="{{ route('passenger.notifications') }}" class="{{ request()->routeIs('passenger.notifications') ? 'active' : '' }}">Notifications</a>
-                <a href="{{ route('passenger.profile') }}" class="{{ request()->routeIs('passenger.profile') ? 'active' : '' }}">Profile</a>
-            @endif
         </nav>
 
         <div class="header-actions">
@@ -141,7 +137,7 @@
     @yield('content')
 </main>
 
-<script src="{{ asset('js/common.js') }}"></script>
-<script src="{{ asset('js/passenger.js') }}"></script>
+<script src="{{ asset('js/common.js') }}?v={{ filemtime(public_path('js/common.js')) }}"></script>
+<script src="{{ asset('js/passenger.js') }}?v={{ filemtime(public_path('js/passenger.js')) }}"></script>
 </body>
 </html>
